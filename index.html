@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Live Γραφική Παράσταση Θέσης</title>
+  <title>Προσομοίωση με Live Γραφική Παράσταση και Κόκκινο Tracker</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -69,21 +69,21 @@ function draw() {
   
   // --- Phase Diagram ---
   push();
-  // Ορίζουμε το κέντρο του κύκλου (με μετατόπιση 60px δεξιότερα, x = 160)
+  // Ορίζουμε το κέντρο του κύκλου: μετατόπιση 60px δεξιότερα, π.χ. centerX = 160, centerY = height/2
   let centerX = 160;
   let centerY = height / 2;
   
-  // Σχεδίαση κύκλου με ακτίνα ίση με το A
+  // Σχεδίαση κύκλου με ακτίνα A
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Σχεδίαση αξόνων (ο οριζόντιος από 0 έως width+60)
+  // Σχεδίαση αξόνων: ο οριζόντιος από 0 έως width+60
   stroke(150);
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Υπολογισμός θέσης του γεμάτου κόκκινου σώματος (κλασική μέτρηση: x = centerX+A*cosθ, y = centerY - A*sinθ)
+  // Θέση γεμάτου κόκκινου σώματος (κλασική μέτρηση: x = centerX + A*cosθ, y = centerY - A*sinθ)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
@@ -96,16 +96,16 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // Σχεδίαση της "σκιάς": σώμα με dotted κόκκινο περίγραμμα, το οποίο ταλαντεύεται στον άξονα ψ (δηλαδή έχει x = centerX και y = redBodyY)
+  // Σχεδίαση "σκιάς": σώμα με dotted κόκκινο περίγραμμα, το οποίο ταλαντεύεται στον άξονα ψ (x = centerX, y = redBodyY)
   push();
   noFill();
   stroke(255, 0, 0);
-  drawingContext.setLineDash([2, 2]); // dotted περίγραμμα
+  drawingContext.setLineDash([2, 2]);
   ellipse(centerX, redBodyY, 15, 15);
   drawingContext.setLineDash([]);
   pop();
   
-  // Με την ίδια dotted γραμμή (μαύρη) συνδέονται το γεμάτο κόκκινο σώμα και η "σκιά"
+  // Με την ίδια dotted (μαύρη) γραμμή συνδέονται το γεμάτο κόκκινο σώμα και η "σκιά"
   push();
   stroke(0);
   drawingContext.setLineDash([2, 2]);
@@ -116,24 +116,25 @@ function draw() {
   
   // --- Γραφική Παράσταση Θέσης Live ---
   push();
-  // Ο οριζόντιος άξονας του γραφήματος συμπίπτει με τον άξονα x του κύκλου.
-  // Ο κατακόρυφος άξονας τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px).
-  // Δεδομένου ότι το ανώτατο όριο του slider για το A είναι 120, θεωρούμε maxAmplitude = 120.
-  let graphOriginX = 160 + 120 + 40; // 160+120+40 = 320
+  // Ο οριζόντιος άξονας του γραφήματος συμπίπτει με τον x-άξονα του κύκλου.
+  // Ο κατακόρυφος άξονας του γραφήματος τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px).
+  // Θεωρούμε maxAmplitude = 120 (ανώτατο όριο του slider).
+  let graphOriginX = 160 + 120 + 40; // 160 + 120 + 40 = 320
   let graphWidth = 200;
-  let graphHeight = 240;  // απεικόνιση από -120 έως +120
+  let graphHeight = 240;  // για τιμές από -120 έως +120
   let graphOriginY = centerY; // Συμπίπτει με τον οριζόντιο άξονα του κύκλου
-  let scaleY = (graphHeight / 2) / 120;  // κλίμακα για την τιμή 120
+  let scaleY = (graphHeight / 2) / 120;
   
-  // Σχεδίαση αξόνων του γραφήματος
+  // Σχεδίαση αξόνων γραφήματος
   stroke(0);
   // Κατακόρυφος (y) άξονας
   line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
   // Οριζόντιος (x) άξονας
   line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
   
-  // Σχεδίαση της καμπύλης live: για t από 0 έως currentGraphTime (όπου currentGraphTime = min(t, T))
-  let currentGraphTime = t < T ? t : T;
+  // Live σχεδίαση της καμπύλης:
+  // Για t από 0 έως currentGraphTime, όπου currentGraphTime = min(t, T)
+  let currentGraphTime = (t < T) ? t : T;
   let numPoints = 100;
   let fraction = currentGraphTime / T;
   let numPointsToDraw = floor(numPoints * fraction);
@@ -143,19 +144,26 @@ function draw() {
   for (let i = 0; i <= numPointsToDraw; i++) {
     let tGraph = (i / numPoints) * T;
     let xGraph = graphOriginX + (tGraph / T) * graphWidth;
-    // Η εξίσωση ταλάντωσης: y = -A*sin(ω*tGraph+φ) (με αρνητικό για να έχουμε θετικό ψ προς τα πάνω)
     let yGraph = graphOriginY + (-A * sin(omega * tGraph + phi)) * scaleY;
     vertex(xGraph, yGraph);
   }
   endShape();
+  
+  // Εάν ο χρόνος έχει ξεπεράσει την περίοδο, σχεδιάζουμε ένα κόκκινο σημείο (tracker)
+  let tGraphCurrent = (t < T) ? t : (t % T);
+  let xCurrent = graphOriginX + (tGraphCurrent / T) * graphWidth;
+  let yCurrent = graphOriginY + (-A * sin(omega * tGraphCurrent + phi)) * scaleY;
+  fill(255, 0, 0);
+  noStroke();
+  ellipse(xCurrent, yCurrent, 6, 6);
   pop();
   
   // --- Προσομοίωση Ελατηρίου (Blue Body) ---
   push();
   let springX = width * 0.75;  // x θέση του ελατηρίου
   let fixedY = 50;           // θέση "ταβανιού"
-  let eqY = height / 2;      // θέση ισορροπίας (κέντρο του καμβά)
-  // Το μπλε σώμα ταλαντεύεται με την ίδια εξίσωση: y = eqY - A*sinθ (κατά κλασική μέτρηση)
+  let eqY = centerY;         // θέση ισορροπίας (κέντρο του καμβά)
+  // Το μπλε σώμα ταλαντεύεται με εξίσωση: y = eqY - A*sinθ (κατά κλασική μέτρηση)
   let massY = eqY - A * sin(theta);
   
   // Σχεδίαση του ελατηρίου
@@ -182,7 +190,6 @@ function draw() {
   push();
   stroke(0);
   drawingContext.setLineDash([1, 2]); // πιο dotted
-  // Η "σκιά" έχει κέντρο (centerX, redBodyY) = (160, redBodyY)
   line(160, redBodyY, springX, massY);
   drawingContext.setLineDash([]);
   pop();
