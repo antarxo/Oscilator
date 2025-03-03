@@ -8,7 +8,7 @@
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Στυλ παρόμοιο με wavesfull.html */
+    /* Στυλ παρόμοιο με το wavesfull.html */
     body, html {
       margin: 0;
       padding: 0;
@@ -46,26 +46,24 @@
     <div class="canvas-area"></div>
   </div>
 <script>
-// Global variables για sliders και κουμπιά (DOM στοιχεία)
+/* Global DOM elements για sliders, κουμπιά, κ.λπ. */
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
-let sliderX = 20, sliderY = 20;
+let sliderX = 20, sliderY = 120; // μετατοπισμένα ώστε να κατέβουν κάτω από τον τίτλο
 
-// Flags για τα στοιχεία που θέλουμε να εμφανίζονται μέσα στον καμβά (μέσα από τα checkboxes)
+// Flags για εμφάνιση στοιχείων μέσα στον καμβά (μέσω "checkboxes")
 let showRedOutline = false;
 let showGraph = false;
 let showSpringBody = false;
 
 let startTime, startTimeOffset = 0;
-let isRunning = false; // Προσομοίωση ξεκινάει σε παύση
+let isRunning = false; // Ξεκινάει σε παύση
 
-// p5.js setup
 function setup() {
   let canvas = createCanvas(800, 600);
-  // Τοποθετούμε τον καμβά μέσα στο .canvas-area
   canvas.parent(select('.canvas-area'));
   
-  // Δημιουργία sliders – τοποθετούνται ως DOM στοιχεία πάνω αριστερά
+  // Sliders
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
@@ -81,14 +79,9 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Δημιουργία κουμπιών
+  // Κουμπιά – αρχικά θέτουμε dummy θέσεις (θα μετακινηθούν στο draw)
   startPauseButton = createButton('Start');
-  startPauseButton.position(sliderX, sliderY + 100);
-  startPauseButton.mousePressed(toggleSimulation);
-  
   resetButton = createButton('Reset');
-  resetButton.position(sliderX + 80, sliderY + 100);
-  resetButton.mousePressed(resetSimulation);
   
   startTime = millis();
   noLoop();
@@ -102,20 +95,22 @@ function draw() {
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
   let phi = radians(phiDegrees);
+  
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
   // --- Phase Diagram (Κύκλος) ---
   push();
-  let centerX = 160; // Κέντρο του κύκλου, μετατοπισμένο 60px δεξιότερα από το 100
+  let centerX = 160; // Κέντρο του κύκλου (με μετατόπιση 60px δεξιότερα από 100)
   let centerY = height / 2;
-  // Σχεδίαση κύκλου με ακτίνα A
+  
+  // Σχεδίαση κύκλου
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Αξόνες του κύκλου
+  // Σχεδίαση αξόνων του κύκλου
   stroke(150);
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
@@ -124,18 +119,15 @@ function draw() {
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  // Μετατοπισμένο "0": 10px αριστερότερα και 10px κάτω
   text("0", centerX - 10, centerY + 10);
-  // "+A": προσθέτουμε 5px στο x και αφαιρούμε 5px στο y από τις προηγούμενες τιμές
-  text("+A", centerX - 20 + 5, centerY - A - 5 - 5);
-  // "-A": +5 στο x και +5 στο y
-  text("-A", centerX - 20 + 5, centerY + A + 5 + 5);
+  text("+A", centerX - 20 + 5, centerY - A - 5); // +A: 5px πιο δεξιά και 5px πιο πάνω
+  text("-A", centerX - 20 + 5, centerY + A + 5); // -A: 5px πιο δεξιά και 5px πιο κάτω
   
-  // Θέση γεμάτου κόκκινου σώματος (x = centerX + A*cosθ, y = centerY - A*sinθ)
+  // Θέση γεμάτου κόκκινου σώματος: x = centerX + A*cosθ, y = centerY - A*sinθ
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
-  // Σχεδίαση ακτίνας από το κέντρο προς το γεμάτο σώμα
+  // Σχεδίαση ακτίνας προς το γεμάτο σώμα
   stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
@@ -144,7 +136,7 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // "Σκιά": σώμα με dotted κόκκινο περίγραμμα (εμφανίζεται μόνο αν showRedOutline=true)
+  // "Σκιά": κόκκινο περίγραμμα (εμφανίζεται μόνο αν showRedOutline==true)
   if (showRedOutline) {
     push();
     noFill();
@@ -154,7 +146,7 @@ function draw() {
     drawingContext.setLineDash([]);
     pop();
     
-    // Δotted (μαύρη) γραμμή που συνδέει το γεμάτο σώμα με τη "σκιά"
+    // Δotted γραμμή (μαύρη) που συνδέει το γεμάτο σώμα με τη "σκιά"
     push();
     stroke(0);
     drawingContext.setLineDash([2, 2]);
@@ -167,9 +159,9 @@ function draw() {
   // --- Γραφική Παράσταση Θέσης Live ---
   if (showGraph) {
     push();
-    let graphOriginX = centerX + 120 + 40; // 160 + 120 + 40 = 320
+    let graphOriginX = centerX + 120 + 40; // 160+120+40 = 320
     let graphWidth = 200;
-    let graphHeight = 240; // για τιμές -120 έως +120
+    let graphHeight = 240; // τιμές από -120 έως +120
     let graphOriginY = centerY;
     let scaleY = (graphHeight / 2) / 120;
     
@@ -178,18 +170,18 @@ function draw() {
     line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
     line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
     
-    // Ετικέτες στους άξονες: μετατοπίστε "ψ" και "t" 10px αριστερότερα
+    // Ετικέτες στους άξονες – μετατοπισμένες 10px αριστερότερα
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    text("ψ", graphOriginX, graphOriginY - graphHeight / 2);  // "ψ": 10px αριστερότερα από προηγούμενο (αφαιρέσαμε 10 από το x)
-    text("t", graphOriginX + graphWidth + 60, graphOriginY + 10); // "t": 10px αριστερότερα από (graphOriginX+graphWidth+70)
+    text("ψ", graphOriginX, graphOriginY - graphHeight / 2);
+    text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10);
     
     let n = floor(t / T);
     text("(" + n + "T, 0)", graphOriginX - 20, graphOriginY + 15);
-    text("(" + (n + 1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15);
+    text((n + 1) + "T", graphOriginX + graphWidth, graphOriginY + 15);
     
-    // Οριζόντιες dotted γραμμές για τις θέσεις +A και -A στον άξονα ψ του γραφήματος
+    // Οριζόντιες dotted γραμμές για τις τιμές +A και -A
     push();
     stroke(0, 0, 0, 100);
     drawingContext.setLineDash([2, 2]);
@@ -237,26 +229,21 @@ function draw() {
     pop();
   }
   
-  // --- Checkboxes (στοιχεία ελέγχου) μέσα στον καμβά, κάτω από το γράφημα ---
-  drawCheckboxes();
-  
   // --- Προσομοίωση Ελατηρίου-Σώματος (Blue Body & Spring) ---
   if (showSpringBody) {
     push();
-    // Μετατόπιση του ελατηρίου 60px δεξιότερα
-    let springX = width * 0.75 + 60;
+    let springX = width * 0.75 + 60; // μετατοπισμένο 60px δεξιότερα
     let fixedY = 50;
     let centerY = height / 2;
-    // Το μπλε σώμα ταλαντεύεται: y = centerY - A*sinθ
-    let massY = centerY - A * sin(theta);
+    let massY = centerY - A * sin(theta);  // το μπλε σώμα παρακολουθεί την ταλάντωση
     
-    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής μόνο πάνω από το ελατήριο (μόνο πάνω από το ελατήριο)
+    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής μόνο πάνω από το ελατήριο
     stroke(50);
     strokeWeight(4);
     line(springX - 60, fixedY, springX + 60, fixedY);
     strokeWeight(1);
     
-    // Σχεδίαση του ελατηρίου: το τέλος του ελατηρίου συνδέεται με το massY
+    // Σχεδίαση του ελατηρίου με τέλος στο massY
     stroke(0);
     noFill();
     beginShape();
@@ -289,7 +276,14 @@ function draw() {
   drawingContext.setLineDash([]);
   pop();
   
-  // --- Ετικέτες για τα sliders (ευθυγραμμισμένες με τα sliders) ---
+  // --- Σχεδίαση Checkboxes και Κουμπιών Ελέγχου μέσα στον καμβά ---
+  drawCheckboxes();
+  // Τοποθέτηση των κουμπιών κάτω από τα checkboxes – στοιχιμένα στο κέντρο του καμβά
+  let btnY =  baseCheckboxY() + 30;
+  startPauseButton.position(width/2 - 50, btnY);
+  resetButton.position(width/2 + 10, btnY);
+  
+  // --- Ετικέτες για τα sliders (ευθυγραμμισμένες με τους sliders) ---
   push();
   fill(0);
   noStroke();
@@ -300,73 +294,89 @@ function draw() {
   pop();
 }
 
-// Σχεδίαση checkboxes μέσα στον καμβά (κάτω από τη γραφική παράσταση)
-// Τα checkboxes τοποθετούνται σε μία γραμμή, στο y = graphOriginY + graphHeight/2 + 20.
-// Εδώ θεωρούμε graphOriginY = centerY και graphHeight = 240, άρα baseY = centerY + 120 + 20 = 300 + 120 + 20 = 440.
+// Σχεδίαση checkboxes μέσα στον καμβά (στο κάτω μέρος, μία γραμμή)
+function baseCheckboxY() {
+  // Βάση για τα checkboxes: τοποθετούμε τα στο κάτω μέρος, κάτω από το γράφημα.
+  return 520; // μπορείτε να προσαρμόσετε αν χρειάζεται
+}
+
 function drawCheckboxes() {
-  let baseY = 440;
+  let baseY =  baseCheckboxY();
   let boxSize = 15;
   textSize(14);
   textAlign(LEFT, CENTER);
   
+  // Ομαδοποίηση στο κέντρο του καμβά: υπολογίζουμε ένα baseX ώστε ομαδοποιημένα να στοιχίζονται.
+  let groupWidth = 400; // εκτιμώμενο συνολικό πλάτος για 3 checkboxes και τις ετικέτες τους
+  let baseX = (width - groupWidth) / 2;
+  
   // Checkbox 1: "Κόκκινο περίγραμμα"
-  // Σχεδίαση κουτιού
   fill(255);
   stroke(0);
-  rect(20, baseY, boxSize, boxSize);
+  rect(baseX, baseY, boxSize, boxSize);
   if (showRedOutline) {
     stroke(0);
-    line(20, baseY, 20 + boxSize, baseY + boxSize);
-    line(20 + boxSize, baseY, 20, baseY + boxSize);
+    line(baseX, baseY, baseX + boxSize, baseY + boxSize);
+    line(baseX + boxSize, baseY, baseX, baseY + boxSize);
   }
   noStroke();
   fill(0);
-  text("Κόκκινο περίγραμμα", 20 + boxSize + 5, baseY + boxSize / 2);
+  text("Κόκκινο περίγραμμα", baseX + boxSize + 5, baseY + boxSize/2);
   
-  // Checkbox 2: "Γραφική Παράσταση"
+  // Checkbox 2: "Ελατήριο-Σώμα"
+  let box2X = baseX + 150;
   fill(255);
   stroke(0);
-  rect(220, baseY, boxSize, boxSize);
-  if (showGraph) {
-    stroke(0);
-    line(220, baseY, 220 + boxSize, baseY + boxSize);
-    line(220 + boxSize, baseY, 220, baseY + boxSize);
-  }
-  noStroke();
-  fill(0);
-  text("Γραφική Παράσταση", 220 + boxSize + 5, baseY + boxSize / 2);
-  
-  // Checkbox 3: "Ελατήριο-Σώμα"
-  fill(255);
-  stroke(0);
-  rect(420, baseY, boxSize, boxSize);
+  rect(box2X, baseY, boxSize, boxSize);
   if (showSpringBody) {
     stroke(0);
-    line(420, baseY, 420 + boxSize, baseY + boxSize);
-    line(420 + boxSize, baseY, 420, baseY + boxSize);
+    line(box2X, baseY, box2X + boxSize, baseY + boxSize);
+    line(box2X + boxSize, baseY, box2X, baseY + boxSize);
   }
   noStroke();
   fill(0);
-  text("Ελατήριο-Σώμα", 420 + boxSize + 5, baseY + boxSize / 2);
+  text("Ελατήριο-Σώμα", box2X + boxSize + 5, baseY + boxSize/2);
+  
+  // Checkbox 3: "Γραφική Παράσταση"
+  let box3X = baseX + 300;
+  fill(255);
+  stroke(0);
+  rect(box3X, baseY, boxSize, boxSize);
+  if (showGraph) {
+    stroke(0);
+    line(box3X, baseY, box3X + boxSize, baseY + boxSize);
+    line(box3X + boxSize, baseY, box3X, baseY + boxSize);
+  }
+  noStroke();
+  fill(0);
+  text("Γραφική Παράσταση", box3X + boxSize + 5, baseY + boxSize/2);
 }
 
 // Αντίδραση στο mouse click για τα checkboxes μέσα στον καμβά
 function mousePressed() {
-  let baseY = 440;
+  let baseY = baseCheckboxY();
   let boxSize = 15;
   
-  if (mouseX >= 20 && mouseX <= 20 + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
+  // Checkbox 1: "Κόκκινο περίγραμμα"
+  let box1X = (width - 400) / 2;
+  if (mouseX >= box1X && mouseX <= box1X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showRedOutline = !showRedOutline;
     redraw();
   }
-  if (mouseX >= 220 && mouseX <= 220 + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
-    showGraph = !showGraph;
-    redraw();
-  }
-  if (mouseX >= 420 && mouseX <= 420 + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
+  // Checkbox 2: "Ελατήριο-Σώμα"
+  let box2X = (width - 400) / 2 + 150;
+  if (mouseX >= box2X && mouseX <= box2X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showSpringBody = !showSpringBody;
     redraw();
   }
+  // Checkbox 3: "Γραφική Παράσταση"
+  let box3X = (width - 400) / 2 + 300;
+  if (mouseX >= box3X && mouseX <= box3X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
+    showGraph = !showGraph;
+    redraw();
+  }
+  
+  // Επίσης, εάν γίνει κλικ σε κάποια περιοχή των DOM κουμπιών, ας μην παρεμβαίνει εδώ
 }
 
 function toggleSimulation() {
