@@ -8,7 +8,7 @@
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Στυλ όπως στο wavesfull.html */
+    /* Στυλ παρόμοιο με το wavesfull.html */
     body, html {
       margin: 0;
       padding: 0;
@@ -46,13 +46,13 @@
     <div class="canvas-area"></div>
   </div>
 <script>
-// Global DOM elements για sliders και κουμπιά
+// Global DOM elements for sliders and buttons
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
-let sliderY1 = 100, sliderY2 = 140, sliderY3 = 180;
 let sliderX = 20;
+let sliderY1 = 100, sliderY2 = 140, sliderY3 = 180; // vertical positions for the three sliders
 
-// Flags για εμφάνιση στοιχείων (μέσω checkboxes που σχεδιάζονται μέσα στον καμβά)
+// Flags for elements shown inside the canvas (via checkboxes)
 let showRedOutline = false;
 let showGraph = false;
 let showSpringBody = false;
@@ -64,7 +64,7 @@ function setup() {
   let canvas = createCanvas(800, 600);
   canvas.parent(select('.canvas-area'));
   
-  // Δημιουργία sliders – τοποθετούνται κάθετα
+  // Create sliders
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
@@ -80,7 +80,7 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Δημιουργία κουμπιών – θα τοποθετηθούν αργότερα μέσα στον καμβά
+  // Create buttons – positions will be set in draw()
   startPauseButton = createButton('Start');
   resetButton = createButton('Reset');
   
@@ -91,7 +91,7 @@ function setup() {
 function draw() {
   background(240);
   
-  // Λήψη τιμών από τα sliders
+  // Get slider values
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
@@ -101,9 +101,9 @@ function draw() {
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
-  // --- Phase Diagram (Κύκλος) ---
+  // --- Phase Diagram (Circle) ---
   push();
-  let centerX = 160; // Κέντρο του κύκλου (με μετατόπιση 60px δεξιότερα από 100)
+  let centerX = 160;
   let centerY = height / 2;
   
   stroke(0);
@@ -114,17 +114,14 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Ετικέτες στο κύκλο
+  // Labels in circle
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  // "0" μετατοπισμένο 10px αριστερότερα και 10px κάτω
-  text("0", centerX - 10, centerY + 10);
-  // "+A" και "-A" μετατοπισμένες 5px πιο δεξιά και 5px αντίστοιχα πάνω/κάτω
-  text("+A", centerX - 20 + 5, centerY - A - 5);
-  text("-A", centerX - 20 + 5, centerY + A + 5);
+  text("0", centerX - 10, centerY + 10); // "0" moved 10px left and 10px down
+  text("+A", centerX - 20 + 5, centerY - A - 5); // "+A" 5px right, 5px up
+  text("-A", centerX - 20 + 5, centerY + A + 5); // "-A" 5px right, 5px down
   
-  // Θέση γεμάτου κόκκινου σώματος: x = centerX + A*cosθ, y = centerY - A*sinθ
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
@@ -135,7 +132,6 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // "Σκιά": Κόκκινο περίγραμμα – εμφανίζεται μόνο αν το αντίστοιχο flag είναι true
   if (showRedOutline) {
     push();
     noFill();
@@ -154,10 +150,10 @@ function draw() {
   }
   pop();
   
-  // --- Γραφική Παράσταση Θέσης Live ---
+  // --- Live Graph ---
   if (showGraph) {
     push();
-    let graphOriginX = centerX + 120 + 40; // 160 + 120 + 40 = 320
+    let graphOriginX = centerX + 120 + 40; // 320
     let graphWidth = 200;
     let graphHeight = 240;
     let graphOriginY = centerY;
@@ -170,10 +166,8 @@ function draw() {
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    // Ετικέτα "ψ" 10px αριστερότερα (graphOriginX - 10)
-    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);
-    // Ετικέτα "t" μετατοπισμένη 10px αριστερότερα από την προηγούμενη (graphOriginX + graphWidth + 60 - 10)
-    text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10);
+    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);  // "ψ" 10px left of graphOriginX
+    text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10); // "t" 10px left of previous value
     
     let n = floor(t / T);
     text("(" + n + "T, 0)", graphOriginX - 20, graphOriginY + 15);
@@ -222,15 +216,14 @@ function draw() {
     pop();
   }
   
-  // --- Προσομοίωση Ελατηρίου-Σώματος (Blue Body & Spring) ---
+  // --- Spring-Body System (Blue Body & Spring) ---
   if (showSpringBody) {
     push();
-    let springX = width * 0.75 + 60; // μετατοπισμένο 60px δεξιότερα
+    let springX = width * 0.75 + 60; // 60px to the right
     let fixedY = 50;
     let centerY = height / 2;
     let massY = centerY - A * sin(theta);
     
-    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής πάνω από το ελατήριο, μόνο πάνω από αυτό
     stroke(50);
     strokeWeight(4);
     line(springX - 60, fixedY, springX + 60, fixedY);
@@ -255,7 +248,7 @@ function draw() {
     pop();
   }
   
-  // --- Δotted γραμμή που συνδέει το κέντρο της "σκιάς" με το κέντρο του μπλε σώματος ---
+  // --- Dotted line connecting "shadow" center and blue body center ---
   push();
   stroke(0);
   drawingContext.setLineDash([1, 2]);
@@ -267,27 +260,25 @@ function draw() {
   drawingContext.setLineDash([]);
   pop();
   
-  // --- Σχεδίαση Checkboxes και Κουμπιών Ελέγχου μέσα στον καμβά ---
+  // --- Draw Checkboxes and Control Buttons inside Canvas ---
   drawCheckboxes();
-  
-  // Τοποθέτηση των κουμπιών Start/Pause και Reset κάτω από τα checkboxes στο κέντρο του καμβά
   let btnY = baseCheckboxY() + 30;
   startPauseButton.position(width/2 - 50, btnY);
   resetButton.position(width/2 + 10, btnY);
   
-  // --- Ετικέτες για τους sliders – ευθυγραμμισμένες με τους DOM sliders ---
+  // --- Slider Labels (aligned with the DOM sliders) ---
   push();
   fill(0);
   noStroke();
   textAlign(LEFT, CENTER);
-  text("Πλάτος (A): " + A, sliderX + 180, sliderY + 10);
-  text("Περίοδος (T): " + nf(T, 1, 2) + " s", sliderX + 180, sliderY + 40);
-  text("Αρχική Φάση (φ): " + phiDegrees + "°", sliderX + 180, sliderY + 70);
+  text("Πλάτος (A): " + A, sliderX + 180, sliderY1 + 10);
+  text("Περίοδος (T): " + nf(T, 1, 2) + " s", sliderX + 180, sliderY2 + 10);
+  text("Αρχική Φάση (φ): " + phiDegrees + "°", sliderX + 180, sliderY3 + 10);
   pop();
 }
 
 function baseCheckboxY() {
-  return 520; // Βάση για τα checkboxes μέσα στον καμβά
+  return 520;
 }
 
 function drawCheckboxes() {
@@ -296,11 +287,11 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Ομαδοποίηση στο κέντρο του καμβά: συνολικό πλάτος περίπου 400px
+  // Center group width ~400px
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
-  // Checkbox 1: "Προβολή" (αντί για "Κόκκινο περίγραμμα")
+  // Checkbox 1: "Προβολή" (formerly "Κόκκινο περίγραμμα")
   fill(255);
   stroke(0);
   rect(baseX, baseY, boxSize, boxSize);
@@ -348,18 +339,15 @@ function mousePressed() {
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
-  // Checkbox 1: "Προβολή"
   if (mouseX >= baseX && mouseX <= baseX + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showRedOutline = !showRedOutline;
     redraw();
   }
-  // Checkbox 2: "Ελατήριο-Σώμα"
   let box2X = baseX + 150;
   if (mouseX >= box2X && mouseX <= box2X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showSpringBody = !showSpringBody;
     redraw();
   }
-  // Checkbox 3: "Γραφική Παράσταση"
   let box3X = baseX + 300;
   if (mouseX >= box3X && mouseX <= box3X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showGraph = !showGraph;
