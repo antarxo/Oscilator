@@ -22,27 +22,27 @@ let startTimeOffset = 0;
 function setup() {
   createCanvas(800, 600);
   
-  // Δημιουργία slider για το πλάτος (A)
+  // Slider για το πλάτος (A)
   amplitudeSlider = createSlider(20, 200, 100, 1);
   amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
 
-  // Δημιουργία slider για την περίοδο (T)
+  // Slider για την περίοδο (T)
   periodSlider = createSlider(0.5, 5, 2, 0.1);
   periodSlider.position(sliderX, sliderY + 30);
   periodSlider.style('width', '160px');
 
-  // Δημιουργία slider για την αρχική φάση (φ)
+  // Slider για την αρχική φάση (φ)
   phaseSlider = createSlider(0, TWO_PI, 0, 0.01);
   phaseSlider.position(sliderX, sliderY + 60);
   phaseSlider.style('width', '160px');
 
-  // Δημιουργία κουμπιού Start/Pause
+  // Κουμπί Start/Pause
   startPauseButton = createButton('Pause');
   startPauseButton.position(sliderX, sliderY + 100);
   startPauseButton.mousePressed(toggleSimulation);
 
-  // Δημιουργία κουμπιού Reset
+  // Κουμπί Reset
   resetButton = createButton('Reset');
   resetButton.position(sliderX + 80, sliderY + 100);
   resetButton.mousePressed(resetSimulation);
@@ -63,9 +63,10 @@ function draw() {
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
-  // --- Κυκλικό Διάγραμμα (Phase Diagram) ---
+  // --- Phase Diagram ---
   push();
-  let centerX = 100;
+  // Ο κύκλος μετακινείται 60px δεξιότερα (πρωταρχική θέση: 100, τώρα 100+60=160)
+  let centerX = 160;
   let centerY = height / 2;
   
   // Σχεδίαση κύκλου με ακτίνα ίση με το πλάτος (A)
@@ -73,17 +74,18 @@ function draw() {
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Σχεδίαση αξόνων x και y στο κέντρο του κύκλου
+  // Σχεδίαση αξόνων:
   stroke(150);
-  // Επέκταση του οριζόντιου άξονα x προς τα δεξιά (αυτός ο άξονας ξεπερνά το σώμα)
-  line(centerX - A - 20, centerY, centerX + A + 80, centerY);
+  // Ο άξονας x επεκτείνεται από το 0 έως το (width + 60)
+  line(0, centerY, width + 60, centerY);
+  // Ο άξονας y σχεδιάζεται γύρω από το κέντρο του κύκλου
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Σχεδίαση ακτίνας που ακολουθεί το κόκκινο σώμα
+  // Σχεδίαση ακτίνας που ακολουθεί το κόκκινο σώμα (πράσινη γραμμή)
   stroke(0, 150, 0);
   line(centerX, centerY, centerX + A * sin(theta), centerY + A * cos(theta));
   
-  // Σχεδίαση του μικρότερου κόκκινου σώματος που διαγράφει την τροχιά
+  // Σχεδίαση του μικρού κόκκινου σώματος που διαγράφει την τροχιά
   fill(255, 0, 0);
   noStroke();
   let circleX = centerX + A * sin(theta);
@@ -94,11 +96,11 @@ function draw() {
   // --- Προσομοίωση Ελατηρίου-Σώματος ---
   push();
   let springX = width * 0.75;
-  let fixedY = 50;      // Σταθερή θέση (ταβάνι)
-  let eqY = height / 2; // Θέση ισορροπίας του σώματος στο κέντρο του καμβά
+  let fixedY = 50;      // Θέση "ταβανιού"
+  let eqY = height / 2; // Θέση ισορροπίας στο κέντρο του καμβά
   let baseLength = eqY - fixedY;
   
-  // Υπολογισμός κατακόρυφης μετατόπισης με ταλάντωση
+  // Υπολογισμός μετατόπισης του σώματος λόγω ταλάντωσης
   let springDisplacement = A * cos(theta);
   let massY = fixedY + baseLength + springDisplacement;
   
@@ -116,13 +118,13 @@ function draw() {
   vertex(springX, massY);
   endShape();
   
-  // Σχεδίαση του σώματος που ταλαντεύεται (κεντραρισμένο πάνω στον οριζόντιο άξονα)
+  // Σχεδίαση του σώματος που ταλαντεύεται (μπλε κύκλος)
   fill(0, 0, 255);
   noStroke();
   ellipse(springX, massY, 40, 40);
   pop();
   
-  // Εμφάνιση των ετικετών των επιλογέων
+  // Εμφάνιση των ετικετών των επιλογέων (μετατοπισμένες ώστε να μην καλύπτονται)
   fill(0);
   noStroke();
   text("Πλάτος (A): " + A, sliderX + 180, sliderY + 15);
@@ -132,12 +134,12 @@ function draw() {
 
 function toggleSimulation() {
   if (isRunning) {
-    // Αποθήκευση του χρόνου που έχει παρέλθει μέχρι το παύσιμο σημείο
+    // Αποθήκευση του χρόνου που έχει παρέλθει
     startTimeOffset = millis() - startTime;
     noLoop();
     startPauseButton.html('Start');
   } else {
-    // Συνεχίζουμε το χρόνο λαμβάνοντας υπόψη το offset
+    // Επανεκκίνηση με διατήρηση του offset
     startTime = millis() - startTimeOffset;
     loop();
     startPauseButton.html('Pause');
@@ -146,7 +148,7 @@ function toggleSimulation() {
 }
 
 function resetSimulation() {
-  // Επαναφορά του χρόνου στην αρχή της προσομοίωσης
+  // Επαναφορά του χρόνου στο 0
   startTime = millis();
   startTimeOffset = 0;
 }
