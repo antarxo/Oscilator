@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Ετικέτες στο Σύνθετο Γράφημα</title>
+  <title>Προσομοίωση με Εφέ "Ταβανιού" και Επιλογές Εμφάνισης</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -14,6 +14,7 @@
 <script>
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
+let showSpringBodyCheckbox, showGraphCheckbox, showRedOutlineCheckbox;
 let startTime, startTimeOffset = 0;
 let isRunning = false; // Ξεκινάει σε παύση
 let sliderX = 20, sliderY = 20;
@@ -21,36 +22,43 @@ let sliderX = 20, sliderY = 20;
 function setup() {
   createCanvas(800, 600);
   
-  // Slider για το πλάτος (A): 0 έως 120, αρχική τιμή 60
+  // Sliders
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
   amplitudeSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Slider για την περίοδο (T)
   periodSlider = createSlider(0.5, 5, 2, 0.1);
   periodSlider.position(sliderX, sliderY + 30);
   periodSlider.style('width', '160px');
   periodSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Slider για την αρχική φάση (φ) σε μοίρες: 0 έως 299
   phaseSlider = createSlider(0, 299, 0, 1);
   phaseSlider.position(sliderX, sliderY + 60);
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Κουμπί Start/Pause
+  // Buttons
   startPauseButton = createButton('Start');
   startPauseButton.position(sliderX, sliderY + 100);
   startPauseButton.mousePressed(toggleSimulation);
   
-  // Κουμπί Reset
   resetButton = createButton('Reset');
   resetButton.position(sliderX + 80, sliderY + 100);
   resetButton.mousePressed(resetSimulation);
   
+  // Checkboxes για απόκρυψη στοιχείων
+  showSpringBodyCheckbox = createCheckbox("Ελατήριο-Σώμα", true);
+  showSpringBodyCheckbox.position(sliderX, sliderY + 130);
+  
+  showGraphCheckbox = createCheckbox("Γραφική Παράσταση", true);
+  showGraphCheckbox.position(sliderX, sliderY + 160);
+  
+  showRedOutlineCheckbox = createCheckbox("Κόκκινο περίγραμμα", true);
+  showRedOutlineCheckbox.position(sliderX, sliderY + 190);
+  
   startTime = millis();
-  noLoop();  // Η προσομοίωση παραμένει στατική μέχρι το "Start"
+  noLoop();
 }
 
 function draw() {
@@ -62,186 +70,198 @@ function draw() {
   let phiDegrees = phaseSlider.value();
   let phi = radians(phiDegrees);
   
-  // Υπολογισμός χρόνου και γωνίας: θ = ωt + φ, όπου ω = 2π/T
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
-  // --- Phase Diagram (Κύκλος) ---
+  // --- Phase Diagram (αριστερή περιοχή) ---
   push();
-  // Ορίζουμε το κέντρο του κύκλου: μετατοπισμένο 60px δεξιότερα (centerX = 160), centerY = height/2
-  let centerX = 160;
+  let centerX = 160; // μετατοπισμένο 60px δεξιότερα (π.χ. από 100 σε 160)
   let centerY = height / 2;
   
-  // Σχεδίαση κύκλου με ακτίνα A
+  // Κύκλος
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Σχεδίαση αξόνων: ο οριζόντιος άξονας από 0 έως (width + 60)
+  // Αξόνες του κύκλου
   stroke(150);
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Ετικέτες στο phase diagram:
+  // Ετικέτες στο κύκλο
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("0", centerX, centerY);  // στο κέντρο
-  text("+A", centerX - 20, centerY - A - 5);  // +A: λίγο ψηλότερα
-  text("-A", centerX - 20, centerY + A + 5);  // -A: λίγο χαμηλότερα
+  text("0", centerX, centerY);
+  text("+A", centerX - 20, centerY - A - 5);  // +A λίγο ψηλότερα
+  text("-A", centerX - 20, centerY + A + 5);  // -A λίγο χαμηλότερα
   
-  // Θέση γεμάτου κόκκινου σώματος (κλασική μέτρηση: x = centerX + A*cosθ, y = centerY - A*sinθ)
+  // Γεμάτο κόκκινο σώμα (με κλασική μέτρηση: x = centerX + A*cosθ, y = centerY - A*sinθ)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
-  // Σχεδίαση ακτίνας από το κέντρο προς το γεμάτο κόκκινο σώμα
   stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
-  // Σχεδίαση γεμάτου κόκκινου σώματος
   fill(255, 0, 0);
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // Σχεδίαση "σκιάς": σώμα με dotted κόκκινο περίγραμμα (x = centerX, y = redBodyY)
-  push();
-  noFill();
-  stroke(255, 0, 0);
-  drawingContext.setLineDash([2, 2]);
-  ellipse(centerX, redBodyY, 15, 15);
-  drawingContext.setLineDash([]);
-  pop();
-  
-  // Δotted (μαύρη) γραμμή που συνδέει το γεμάτο κόκκινο σώμα με τη "σκιά"
-  push();
-  stroke(0);
-  drawingContext.setLineDash([2, 2]);
-  line(redBodyX, redBodyY, centerX, redBodyY);
-  drawingContext.setLineDash([]);
-  pop();
+  // "Σκιά": σώμα με dotted κόκκινο περίγραμμα (μόνο εάν το checkbox είναι ενεργό)
+  if (showRedOutlineCheckbox.checked()) {
+    push();
+    noFill();
+    stroke(255, 0, 0);
+    drawingContext.setLineDash([2, 2]);
+    ellipse(centerX, redBodyY, 15, 15);
+    drawingContext.setLineDash([]);
+    pop();
+    
+    // Dotted (μαύρη) γραμμή που συνδέει το γεμάτο κόκκινο σώμα με τη "σκιά"
+    push();
+    stroke(0);
+    drawingContext.setLineDash([2, 2]);
+    line(redBodyX, redBodyY, centerX, redBodyY);
+    drawingContext.setLineDash([]);
+    pop();
+  }
   pop();
   
   // --- Γραφική Παράσταση Θέσης Live ---
-  push();
-  // Ο οριζόντιος άξονας του γραφήματος συμπίπτει με τον x-άξονα του κύκλου.
-  // Ο κατακόρυφος άξονας τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px).
-  // Θεωρούμε maxAmplitude = 120.
-  let graphOriginX = centerX + 120 + 40; // 160 + 120 + 40 = 320
-  let graphWidth = 200;
-  let graphHeight = 240;  // για τιμές από -120 έως +120
-  let graphOriginY = centerY; // Συμπίπτει με τον οριζόντιο άξονα του κύκλου
-  let scaleY = (graphHeight / 2) / 120;
-  
-  // Σχεδίαση αξόνων γραφήματος
-  stroke(0);
-  line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
-  line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
-  
-  // Ετικέτες στους άξονες του γραφήματος:
-  fill(0);
-  noStroke();
-  textAlign(CENTER, CENTER);
-  text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);   // "ψ": μετατοπισμένη 10px δεξιότερα
-  text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);      // "t": μετατοπισμένη 60px δεξιότερα (αρχικά +10 → +70)
-  
-  // Ετικέτες στο μηδέν και στο τελικό σημείο του γραφήματος:
-  let n = floor(t / T);
-  text("(" + n + "T, 0)", graphOriginX - 10, graphOriginY + 15);  // (nT,0): μετατοπισμένη 10px αριστερότερα
-  text("(" + (n + 1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15);
-  
-  // Δύο οριζόντιες dotted γραμμές που δείχνουν τις θέσεις των πλατών στον άξονα ψ του γραφήματος:
-  push();
-  stroke(0, 0, 0, 100); // αχνή dotted γραμμή
-  drawingContext.setLineDash([2, 2]);
-  // Στο σημείο του +A: y = graphOriginY - (A * scaleY)
-  line(graphOriginX, graphOriginY - A * scaleY, graphOriginX + graphWidth, graphOriginY - A * scaleY);
-  // Στο σημείο του -A: y = graphOriginY + (A * scaleY)
-  line(graphOriginX, graphOriginY + A * scaleY, graphOriginX + graphWidth, graphOriginY + A * scaleY);
-  drawingContext.setLineDash([]);
-  pop();
-  
-  // Ετικέτες για τα +A και -A στον άξονα ψ του γραφήματος:
-  fill(0);
-  textAlign(RIGHT, CENTER);
-  text("+A", graphOriginX - 10, graphOriginY - A * scaleY);
-  text("-A", graphOriginX - 10, graphOriginY + A * scaleY);
-  
-  // Live σχεδίαση της καμπύλης:
-  let currentGraphTime = (t < T) ? t : T;
-  let numPoints = 100;
-  let fraction = currentGraphTime / T;
-  let numPointsToDraw = floor(numPoints * fraction);
-  noFill();
-  stroke(0);
-  beginShape();
-  let lastX, lastY;
-  for (let i = 0; i <= numPointsToDraw; i++) {
-    let tGraph = (i / numPoints) * T;
-    let xGraph = graphOriginX + (tGraph / T) * graphWidth;
-    let yGraph = graphOriginY + (-A * sin(omega * tGraph + phi)) * scaleY;
-    vertex(xGraph, yGraph);
-    if (i == numPointsToDraw) {
-      lastX = xGraph;
-      lastY = yGraph;
+  if (showGraphCheckbox.checked()) {
+    push();
+    // Ο οριζόντιος άξονας του γραφήματος συμπίπτει με τον x-άξονα του κύκλου.
+    // Ο κατακόρυφος άξονας τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px).
+    let graphOriginX = centerX + 120 + 40; // 160 + 120 + 40 = 320
+    let graphWidth = 200;
+    let graphHeight = 240;  // για τιμές από -120 έως +120
+    let graphOriginY = centerY;
+    let scaleY = (graphHeight / 2) / 120;
+    
+    // Αξόνες γραφήματος
+    stroke(0);
+    line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
+    line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
+    
+    // Ετικέτες στους άξονες
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);  // "ψ" λίγο δεξιότερα
+    text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);   // "t" μετατοπισμένη 60px δεξιότερα
+    
+    // Ετικέτες στο μηδέν και στο τελικό σημείο του γραφήματος
+    let n = floor(t / T);
+    text("(" + n + "T, 0)", graphOriginX - 10, graphOriginY + 15);  
+    text("(" + (n + 1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15);
+    
+    // Οριζόντιες dotted γραμμές για τις θέσεις +A και -A στον άξονα ψ του γραφήματος
+    push();
+    stroke(0, 0, 0, 100);
+    drawingContext.setLineDash([2, 2]);
+    // Στο +A σημείο (αντίστοιχα)
+    line(graphOriginX, graphOriginY - A * scaleY, graphOriginX + graphWidth, graphOriginY - A * scaleY);
+    // Στο -A σημείο
+    line(graphOriginX, graphOriginY + A * scaleY, graphOriginX + graphWidth, graphOriginY + A * scaleY);
+    drawingContext.setLineDash([]);
+    pop();
+    
+    // Ετικέτες για τα +A και -A στον άξονα ψ του γραφήματος
+    fill(0);
+    textAlign(RIGHT, CENTER);
+    text("+A", graphOriginX - 10, graphOriginY - A * scaleY);
+    text("-A", graphOriginX - 10, graphOriginY + A * scaleY);
+    
+    // Live σχεδίαση της καμπύλης (για t από 0 έως min(t, T))
+    let currentGraphTime = (t < T) ? t : T;
+    let numPoints = 100;
+    let fraction = currentGraphTime / T;
+    let numPointsToDraw = floor(numPoints * fraction);
+    noFill();
+    stroke(0);
+    beginShape();
+    let lastX, lastY;
+    for (let i = 0; i <= numPointsToDraw; i++) {
+      let tGraph = (i / numPoints) * T;
+      let xGraph = graphOriginX + (tGraph / T) * graphWidth;
+      let yGraph = graphOriginY + (-A * sin(omega * tGraph + phi)) * scaleY;
+      vertex(xGraph, yGraph);
+      if (i == numPointsToDraw) {
+        lastX = xGraph;
+        lastY = yGraph;
+      }
     }
+    endShape();
+    
+    // Tracker: μετά την πρώτη περίοδο, ένα κόκκινο σημείο "τρέχει" στην καμπύλη
+    let tGraphCurrent = (t < T) ? t : (t % T);
+    let xCurrent = graphOriginX + (tGraphCurrent / T) * graphWidth;
+    let yCurrent = graphOriginY + (-A * sin(omega * tGraphCurrent + phi)) * scaleY;
+    fill(255, 0, 0);
+    noStroke();
+    ellipse(xCurrent, yCurrent, 6, 6);
+    
+    // Δotted (αχνή) γραμμή που συνδέει το τελικό σημείο της καμπύλης (που αντιστοιχεί σε (n+1)T) με τον οριζόντιο άξονα
+    let yFinal = graphOriginY + (-A * sin(omega * T + phi)) * scaleY;
+    stroke(0, 0, 0, 100);
+    drawingContext.setLineDash([1, 2]);
+    line(graphOriginX + graphWidth, yFinal, graphOriginX + graphWidth, graphOriginY);
+    drawingContext.setLineDash([]);
+    pop();
   }
-  endShape();
   
-  // Εάν ο χρόνος έχει ξεπεράσει την περίοδο, σχεδιάζουμε ένα κόκκινο tracker σημείο στην καμπύλη
-  let tGraphCurrent = (t < T) ? t : (t % T);
-  let xCurrent = graphOriginX + (tGraphCurrent / T) * graphWidth;
-  let yCurrent = graphOriginY + (-A * sin(omega * tGraphCurrent + phi)) * scaleY;
-  fill(255, 0, 0);
-  noStroke();
-  ellipse(xCurrent, yCurrent, 6, 6);
-  
-  // Δotted (αχνή) γραμμή που συνδέει το τελικό σημείο της καμπύλης (που αντιστοιχεί σε (n+1)T) με τον οριζόντιο άξονα
-  let yFinal = graphOriginY + (-A * sin(omega * T + phi)) * scaleY;
-  stroke(0, 0, 0, 100);  // αχνή γραμμή
-  drawingContext.setLineDash([1, 2]);
-  line(graphOriginX + graphWidth, yFinal, graphOriginX + graphWidth, graphOriginY);
-  drawingContext.setLineDash([]);
-  pop();
-  
-  // --- Προσομοίωση Ελατηρίου (Blue Body) ---
-  push();
-  // Μετατοπίζουμε το ελατήριο 60px δεξιότερα
-  let springX = width * 0.75 + 60;
-  let fixedY = 50;           // θέση "ταβανιού"
-  let eqY = centerY;         // θέση ισορροπίας (κέντρο του καμβά)
-  // Το μπλε σώμα ταλαντεύεται: y = eqY - A*sinθ (κατά κλασική μέτρηση)
-  let massY = eqY - A * sin(theta);
-  
-  // Σχεδίαση του ελατηρίου
-  stroke(0);
-  noFill();
-  beginShape();
-  vertex(springX, fixedY);
-  let numCoils = 12;
-  let coilLength = (massY - fixedY) / numCoils;
-  for (let i = 1; i < numCoils; i++) {
-    let xOffset = (i % 2 === 0) ? 20 : -20;
-    vertex(springX + xOffset, fixedY + i * coilLength);
+  // --- Προσομοίωση Ελατηρίου-Σώματος (Blue Body & Spring) ---
+  if (showSpringBodyCheckbox.checked()) {
+    push();
+    // Μετατόπιση του ελατηρίου 60px δεξιότερα
+    let springX = width * 0.75 + 60;
+    let fixedY = 50;
+    let eqY = centerY;
+    
+    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής στο πάνω μέρος του ελατηρίου
+    stroke(50);
+    strokeWeight(4);
+    line(0, fixedY, width, fixedY);
+    strokeWeight(1);
+    
+    // Σχεδίαση του ελατηρίου
+    stroke(0);
+    noFill();
+    beginShape();
+    vertex(springX, fixedY);
+    let numCoils = 12;
+    let coilLength = (eqY - fixedY - 20) / numCoils;  // μειώνουμε λίγο το μήκος για να μην έρχεται πολύ κοντά στο σώμα
+    for (let i = 1; i < numCoils; i++) {
+      let xOffset = (i % 2 === 0) ? 20 : -20;
+      vertex(springX + xOffset, fixedY + i * coilLength);
+    }
+    vertex(springX, eqY);
+    endShape();
+    
+    // Σχεδίαση του μπλε σώματος
+    fill(0, 0, 255);
+    noStroke();
+    let massY = eqY - A * sin(theta);
+    ellipse(springX, massY, 40, 40);
+    pop();
   }
-  vertex(springX, massY);
-  endShape();
-  
-  // Σχεδίαση του μπλε σώματος
-  fill(0, 0, 255);
-  noStroke();
-  ellipse(springX, massY, 40, 40);
-  pop();
   
   // --- Δotted γραμμή που συνδέει το κέντρο της "σκιάς" με το κέντρο του μπλε σώματος ---
   push();
   stroke(0);
-  drawingContext.setLineDash([1, 2]); // πιο dotted
-  line(160, redBodyY, springX, massY);
+  drawingContext.setLineDash([1, 2]);
+  // Η "σκιά" έχει κέντρο στο (centerX, redBodyY) = (160, redBodyY)
+  // Εάν το σύστημα ελατηρίου-σώματος εμφανίζεται, το μπλε σώμα έχει κέντρο (springX, massY)
+  let springXForLine = (showSpringBodyCheckbox.checked()) ? (width * 0.75 + 60) : 0;
+  let massYForLine = (showSpringBodyCheckbox.checked()) ? (centerY - A * sin(theta)) : 0;
+  if (showSpringBodyCheckbox.checked()) {
+    line(160, redBodyY, springXForLine, massYForLine);
+  }
   drawingContext.setLineDash([]);
   pop();
   
-  // Εμφάνιση ετικετών για τους sliders (περιοχή ελέγχου)
+  // --- Ετικέτες για τους sliders (περιοχή ελέγχου) ---
   push();
   fill(0);
   noStroke();
