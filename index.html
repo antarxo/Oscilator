@@ -1,3 +1,17 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Προσομοίωση Ελατηρίου & Κυκλικό Διάγραμμα</title>
+  <!-- Συμπερίληψη της βιβλιοθήκης p5.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<script>
 let amplitudeSlider, periodSlider, phaseSlider;
 let startTime;
 
@@ -54,7 +68,7 @@ function draw() {
   // Σχεδίαση του σώματος που διαγράφει την κυκλική τροχιά
   fill(255, 0, 0);
   noStroke();
-  // Το σώμα έχει θέση που εξαρτάται από το θ (με χρήση sin για x και cos για y)
+  // Υπολογισμός θέσης με χρήση sin για το x και cos για το y
   let circleX = centerX + A * sin(theta);
   let circleY = centerY + A * cos(theta);
   ellipse(circleX, circleY, 20, 20);
@@ -79,7 +93,7 @@ function draw() {
   let numCoils = 10;
   let coilLength = (massY - fixedY) / numCoils;
   for (let i = 1; i < numCoils; i++) {
-    let xOffset = (i % 2 == 0) ? 20 : -20;
+    let xOffset = (i % 2 === 0) ? 20 : -20;
     vertex(springX + xOffset, fixedY + i * coilLength);
   }
   vertex(springX, massY);
@@ -98,4 +112,6 @@ function draw() {
   text("Περίοδος (T): " + nf(T, 1, 2) + " s", periodSlider.x * 1.2, periodSlider.y + 15);
   text("Αρχική Φάση (φ): " + nf(phi, 1, 2) + " rad", phaseSlider.x * 1.2, phaseSlider.y + 15);
 }
-
+</script>
+</body>
+</html>
