@@ -21,21 +21,6 @@
     canvas {
       display: block;
     }
-    /* Στυλ για τα κουμπιά σύμφωνα με το wavesfull.html */
-    button, .p5Button {
-      background: #007BFF;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.2s ease;
-    }
-    button:hover, .p5Button:hover {
-      background: #0056b3;
-      transform: scale(1.03);
-    }
   </style>
 </head>
 <body>
@@ -44,10 +29,10 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 60, sliderY2 = 80, sliderY3 = 100; // Οι sliders ανέβηκαν κατά 40px
+let sliderY1 = 60, sliderY2 = 80, sliderY3 = 100; // Ανέβασμα κατά 40px
 
-// Flags για εμφάνιση στοιχείων (μέσω checkboxes σχεδιασμένων μέσα στον καμβά)
-let showRedOutline = false; // για "Προβολή"
+// Flags για εμφάνιση στοιχείων (μέσω checkboxes μέσα στον καμβά)
+let showRedOutline = false; // "Προβολή"
 let showSpringBody = false;
 let showGraph = false;
 
@@ -66,3 +51,341 @@ function setup() {
   
   periodSlider = createSlider(0.5, 5, 2, 0.1);
   periodSlider.position(sliderX, sliderY2);
+  periodSlider.style('width', '160px');
+  periodSlider.input(() => { if (!isRunning) redraw(); });
+  
+  phaseSlider = createSlider(0, 299, 0, 1);
+  phaseSlider.position(sliderX, sliderY3);
+  phaseSlider.style('width', '160px');
+  phaseSlider.input(() => { if (!isRunning) redraw(); });
+  
+  // Δημιουργία κουμπιών Start/Pause και Reset
+  startPauseButton = createButton('Start');
+  startPauseButton.style('position', 'absolute');
+  // Εφαρμογή στυλ κουμπιών (όπως στο wavesfull.html)
+  startPauseButton.style('background', '#007BFF');
+  startPauseButton.style('color', '#fff');
+  startPauseButton.style('border', 'none');
+  startPauseButton.style('border-radius', '8px');
+  startPauseButton.style('padding', '8px 12px');
+  startPauseButton.style('font-size', '16px');
+  startPauseButton.style('cursor', 'pointer');
+  startPauseButton.mousePressed(toggleSimulation);
+  
+  resetButton = createButton('Reset');
+  resetButton.style('position', 'absolute');
+  resetButton.style('background', '#007BFF');
+  resetButton.style('color', '#fff');
+  resetButton.style('border', 'none');
+  resetButton.style('border-radius', '8px');
+  resetButton.style('padding', '8px 12px');
+  resetButton.style('font-size', '16px');
+  resetButton.style('cursor', 'pointer');
+  resetButton.mousePressed(resetSimulation);
+  
+  startTime = millis();
+  noLoop();
+}
+
+function draw() {
+  background(240);
+  
+  // --- Σχεδίαση τίτλου μέσα στον καμβά ---
+  push();
+  rectMode(CENTER);
+  noStroke();
+  fill('#007BFF');
+  rect(width/2, 30, width, 50);
+  fill(255);
+  textSize(24);
+  textAlign(CENTER, CENTER);
+  text("Ταλάντωση και Αρχική Φάση", width/2, 30);
+  pop();
+  
+  // Λήψη τιμών από τα sliders
+  let A = amplitudeSlider.value();
+  let T = periodSlider.value();
+  let phiDegrees = phaseSlider.value();
+  let phi = radians(phiDegrees);
+  
+  let t = (millis() - startTime) / 1000;
+  let omega = TWO_PI / T;
+  let theta = omega * t + phi;
+  
+  // --- Phase Diagram (Κύκλος) ---
+  push();
+  let centerX = 160;
+  let centerY = height / 2;
+  
+  textSize(14); // Επιστροφή στο αρχικό μέγεθος γραμματοσειράς
+  stroke(0);
+  noFill();
+  ellipse(centerX, centerY, 2 * A, 2 * A);
+  
+  stroke(150);
+  line(0, centerY, width + 60, centerY);
+  line(centerX, centerY - A - 10, centerX, centerY + A + 10);
+  
+  fill(0);
+  noStroke();
+  textAlign(CENTER, CENTER);
+  text("0", centerX - 10, centerY + 10);
+  text("+A", centerX - 20 + 5, centerY - A - 5);
+  text("-A", centerX - 20 + 5, centerY + A + 5);
+  
+  let redBodyX = centerX + A * cos(theta);
+  let redBodyY = centerY - A * sin(theta);
+  
+  stroke(0, 150, 0);
+  line(centerX, centerY, redBodyX, redBodyY);
+  
+  fill(255, 0, 0);
+  noStroke();
+  ellipse(redBodyX, redBodyY, 15, 15);
+  
+  if (showRedOutline) {
+    push();
+    noFill();
+    stroke(255, 0, 0);
+    drawingContext.setLineDash([2, 2]);
+    ellipse(centerX, redBodyY, 15, 15);
+    drawingContext.setLineDash([]);
+    pop();
+    
+    push();
+    stroke(0);
+    drawingContext.setLineDash([2, 2]);
+    line(redBodyX, redBodyY, centerX, redBodyY);
+    drawingContext.setLineDash([]);
+    pop();
+  }
+  pop();
+  
+  // --- Live Graph ---
+  if (showGraph) {
+    push();
+    let graphOriginX = centerX + 120 + 40; // 320
+    let graphWidth = 200;
+    let graphHeight = 240;
+    let graphOriginY = centerY;
+    let scaleY = (graphHeight / 2) / 120;
+    
+    stroke(0);
+    line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
+    line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
+    
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);
+    text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10);
+    
+    let n = floor(t / T);
+    text("(" + n + "T, 0)", graphOriginX - 20, graphOriginY + 15);
+    text((n + 1) + "T", graphOriginX + graphWidth, graphOriginY + 15);
+    
+    push();
+    stroke(0, 0, 0, 100);
+    drawingContext.setLineDash([2, 2]);
+    line(graphOriginX, graphOriginY - A * scaleY, graphOriginX + graphWidth, graphOriginY - A * scaleY);
+    line(graphOriginX, graphOriginY + A * scaleY, graphOriginX + graphWidth, graphOriginY + A * scaleY);
+    drawingContext.setLineDash([]);
+    pop();
+    
+    fill(0);
+    textAlign(RIGHT, CENTER);
+    text("+A", graphOriginX - 10, graphOriginY - A * scaleY);
+    text("-A", graphOriginX - 10, graphOriginY + A * scaleY);
+    
+    let currentGraphTime = (t < T) ? t : T;
+    let numPoints = 100;
+    let fraction = currentGraphTime / T;
+    let numPointsToDraw = floor(numPoints * fraction);
+    noFill();
+    stroke(0);
+    beginShape();
+    for (let i = 0; i <= numPointsToDraw; i++) {
+      let tGraph = (i / numPoints) * T;
+      let xGraph = graphOriginX + (tGraph / T) * graphWidth;
+      let yGraph = graphOriginY + (-A * sin(omega * tGraph + phi)) * scaleY;
+      vertex(xGraph, yGraph);
+    }
+    endShape();
+    
+    let tGraphCurrent = (t < T) ? t : (t % T);
+    let xCurrent = graphOriginX + (tGraphCurrent / T) * graphWidth;
+    let yCurrent = graphOriginY + (-A * sin(omega * tGraphCurrent + phi)) * scaleY;
+    fill(255, 0, 0);
+    noStroke();
+    ellipse(xCurrent, yCurrent, 6, 6);
+    
+    let yFinal = graphOriginY + (-A * sin(omega * T + phi)) * scaleY;
+    stroke(0, 0, 0, 100);
+    drawingContext.setLineDash([1, 2]);
+    line(graphOriginX + graphWidth, yFinal, graphOriginX + graphWidth, graphOriginY);
+    drawingContext.setLineDash([]);
+    pop();
+  }
+  
+  // --- Spring-Body System (Blue Body & Spring) ---
+  if (showSpringBody) {
+    push();
+    let springX = width * 0.75 + 60;
+    let fixedY = 50;
+    let centerY = height / 2;
+    let massY = centerY - A * sin(theta);
+    
+    stroke(50);
+    strokeWeight(4);
+    line(springX - 60, fixedY, springX + 60, fixedY);
+    strokeWeight(1);
+    
+    stroke(0);
+    noFill();
+    beginShape();
+    vertex(springX, fixedY);
+    let numCoils = 12;
+    let coilLength = (massY - fixedY) / numCoils;
+    for (let i = 1; i < numCoils; i++) {
+      let xOffset = (i % 2 === 0) ? 20 : -20;
+      vertex(springX + xOffset, fixedY + i * coilLength);
+    }
+    vertex(springX, massY);
+    endShape();
+    
+    fill(0, 0, 255);
+    noStroke();
+    ellipse(springX, massY, 40, 40);
+    pop();
+  }
+  
+  // --- Dotted line connecting "shadow" with blue body ---
+  push();
+  stroke(0);
+  drawingContext.setLineDash([1, 2]);
+  if (showSpringBody) {
+    let springXForLine = width * 0.75 + 60;
+    let massYForLine = height / 2 - A * sin(theta);
+    line(160, redBodyY, springXForLine, massYForLine);
+  }
+  drawingContext.setLineDash([]);
+  pop();
+  
+  // --- Draw Checkboxes and Control Buttons inside the canvas ---
+  drawCheckboxes();
+  let btnY = baseCheckboxY() + 60; // αυξημένο κενό μεταξύ checkboxes και κουμπιών
+  startPauseButton.position(width/2 - 50, btnY);
+  resetButton.position(width/2 + 10, btnY);
+  
+  // --- Slider Labels (aligned with each slider) ---
+  push();
+  fill(0);
+  noStroke();
+  textAlign(LEFT, CENTER);
+  text("Πλάτος (A): " + A, sliderX + 180, sliderY1 + 10);
+  text("Περίοδος (T): " + nf(T, 1, 2) + " s", sliderX + 180, sliderY2 + 10);
+  text("Αρχική Φάση (φ): " + phiDegrees + "°", sliderX + 180, sliderY3 + 10);
+  pop();
+}
+
+function baseCheckboxY() {
+  return 520;
+}
+
+function drawCheckboxes() {
+  let baseY = baseCheckboxY();
+  let boxSize = 15;
+  textSize(14);
+  textAlign(LEFT, CENTER);
+  
+  // Ομαδοποίηση: συνολικό πλάτος περίπου 400px, κεντραρισμένο
+  let groupWidth = 400;
+  let baseX = (width - groupWidth) / 2;
+  
+  // Checkbox 1: "Προβολή"
+  fill(255);
+  stroke(0);
+  rect(baseX, baseY, boxSize, boxSize);
+  if (showRedOutline) {
+    stroke(0);
+    line(baseX, baseY, baseX + boxSize, baseY + boxSize);
+    line(baseX + boxSize, baseY, baseX, baseY + boxSize);
+  }
+  noStroke();
+  fill(0);
+  text("Προβολή", baseX + boxSize + 5, baseY + boxSize / 2);
+  
+  // Checkbox 2: "Ελατήριο-Σώμα"
+  let box2X = baseX + 150;
+  fill(255);
+  stroke(0);
+  rect(box2X, baseY, boxSize, boxSize);
+  if (showSpringBody) {
+    stroke(0);
+    line(box2X, baseY, box2X + boxSize, baseY + boxSize);
+    line(box2X + boxSize, baseY, box2X, baseY + boxSize);
+  }
+  noStroke();
+  fill(0);
+  text("Ελατήριο-Σώμα", box2X + boxSize + 5, baseY + boxSize / 2);
+  
+  // Checkbox 3: "Γραφική Παράσταση"
+  let box3X = baseX + 300;
+  fill(255);
+  stroke(0);
+  rect(box3X, baseY, boxSize, boxSize);
+  if (showGraph) {
+    stroke(0);
+    line(box3X, baseY, box3X + boxSize, baseY + boxSize);
+    line(box3X + boxSize, baseY, box3X, baseY + boxSize);
+  }
+  noStroke();
+  fill(0);
+  text("Γραφική Παράσταση", box3X + boxSize + 5, baseY + boxSize / 2);
+}
+
+function mousePressed() {
+  let baseY = baseCheckboxY();
+  let boxSize = 15;
+  let groupWidth = 400;
+  let baseX = (width - groupWidth) / 2;
+  
+  if (mouseX >= baseX && mouseX <= baseX + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
+    showRedOutline = !showRedOutline;
+    redraw();
+  }
+  let box2X = baseX + 150;
+  if (mouseX >= box2X && mouseX <= box2X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
+    showSpringBody = !showSpringBody;
+    redraw();
+  }
+  let box3X = baseX + 300;
+  if (mouseX >= box3X && mouseX <= box3X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
+    showGraph = !showGraph;
+    redraw();
+  }
+}
+
+function toggleSimulation() {
+  if (isRunning) {
+    startTimeOffset = millis() - startTime;
+    noLoop();
+    startPauseButton.html('Start');
+  } else {
+    startTime = millis() - startTimeOffset;
+    loop();
+    startPauseButton.html('Pause');
+  }
+  isRunning = !isRunning;
+}
+
+function resetSimulation() {
+  startTime = millis();
+  startTimeOffset = 0;
+  if (!isRunning) {
+    redraw();
+  }
+}
+</script>
+</body>
+</html>
