@@ -44,13 +44,11 @@ function setup() {
   canvas.parent(document.body);
   
   // Δημιουργία DOM sliders
-  // Πλάτος: εύρος 0-100, προεπιλεγμένη τιμή 80
   amplitudeSlider = createSlider(0, 100, 80, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
   amplitudeSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Περίοδος: εύρος 0.1-10, προεπιλεγμένη τιμή 5
   periodSlider = createSlider(0.1, 10, 5, 0.1);
   periodSlider.position(sliderX, sliderY2);
   periodSlider.style('width', '160px');
@@ -276,7 +274,9 @@ function draw() {
   drawCheckboxes();
   let btnY = baseCheckboxY() + 60; // Αυξημένο κενό μεταξύ checkboxes και κουμπιών
   startPauseButton.position(width/2 - 50, btnY);
-  resetButton.position(width/2 + 10, btnY);
+  resetButton.position(width/2 + 20, btnY); // Με αύξηση 10px στη θέση του reset
+  startPauseButton.style('position','absolute');
+  resetButton.style('position','absolute');
   
   // --- Slider Labels (aligned with each slider) ---
   push();
@@ -299,7 +299,6 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Ομαδοποίηση: περίπου 400px πλάτος, κεντραρισμένο
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
