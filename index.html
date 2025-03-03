@@ -29,7 +29,7 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Ανέβασμα κατά 40px
+let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Έχουν ανέβει κατά 40px
 
 // Flags για εμφάνιση στοιχείων (μέσω checkboxes μέσα στον καμβά)
 let showRedOutline = false; // "Προβολή"
@@ -44,13 +44,14 @@ function setup() {
   canvas.parent(document.body);
   
   // Δημιουργία DOM sliders
-  amplitudeSlider = createSlider(0, 100, 60, 1);
+  // Τροποποιήσαμε το εύρος του πλάτους σε 0-100 με προεπιλεγμένη τιμή 8
+  amplitudeSlider = createSlider(0, 100, 8, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
   amplitudeSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Εύρος περιόδου: από 0.1 έως 10
-  periodSlider = createSlider(0.1, 10, 2, 0.1);
+  // Τροποποιήσαμε το εύρος της περιόδου σε 0.1-10 με προεπιλεγμένη τιμή 5
+  periodSlider = createSlider(0.1, 10, 5, 0.1);
   periodSlider.position(sliderX, sliderY2);
   periodSlider.style('width', '160px');
   periodSlider.input(() => { if (!isRunning) redraw(); });
@@ -164,7 +165,7 @@ function draw() {
   // --- Live Graph ---
   if (showGraph) {
     push();
-    let graphOriginX = centerX + 120 + 40;
+    let graphOriginX = centerX + 120 + 40; // 320
     let graphWidth = 200;
     let graphHeight = 240;
     let graphOriginY = centerY;
@@ -273,7 +274,7 @@ function draw() {
   
   // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
-  let btnY = baseCheckboxY() + 60; // Αυξημένο κενό μεταξύ checkboxes και κουμπιών
+  let btnY = baseCheckboxY() + 60; // Αύξηση κενού μεταξύ checkboxes και κουμπιών
   startPauseButton.position(width/2 - 50, btnY);
   resetButton.position(width/2 + 10, btnY);
   
@@ -298,7 +299,6 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Ομαδοποίηση: περίπου 400px πλάτος, κεντραρισμένο
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
