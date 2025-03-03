@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση Ελατηρίου & Κυκλικό Διάγραμμα με Start/Pause και Reset</title>
+  <title>Προσομοίωση με Start/Pause, Reset, και Πρόσθετο Σώμα</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -13,41 +13,44 @@
 <body>
 <script>
 let amplitudeSlider, periodSlider, phaseSlider;
-let startTime;
-let isRunning = true;
 let startPauseButton, resetButton;
+let startTime, startTimeOffset = 0;
+let isRunning = false;  // Αρχικά η προσομοίωση είναι παύση
 let sliderX = 20, sliderY = 20;
-let startTimeOffset = 0;
 
 function setup() {
   createCanvas(800, 600);
   
-  // Slider για το πλάτος (A) από 0 έως 120, προεπιλεγμένη τιμή 60
+  // Slider για το πλάτος (A): τιμές 0 έως 120, αρχική τιμή 60
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
-
+  amplitudeSlider.input(() => { if (!isRunning) redraw(); });
+  
   // Slider για την περίοδο (T)
   periodSlider = createSlider(0.5, 5, 2, 0.1);
   periodSlider.position(sliderX, sliderY + 30);
   periodSlider.style('width', '160px');
-
-  // Slider για την αρχική φάση (φ) σε μοίρες από 0 έως 299
+  periodSlider.input(() => { if (!isRunning) redraw(); });
+  
+  // Slider για την αρχική φάση (φ) σε μοίρες: 0 έως 299
   phaseSlider = createSlider(0, 299, 0, 1);
   phaseSlider.position(sliderX, sliderY + 60);
   phaseSlider.style('width', '160px');
-
+  phaseSlider.input(() => { if (!isRunning) redraw(); });
+  
   // Κουμπί Start/Pause
-  startPauseButton = createButton('Pause');
+  startPauseButton = createButton('Start');
   startPauseButton.position(sliderX, sliderY + 100);
   startPauseButton.mousePressed(toggleSimulation);
-
+  
   // Κουμπί Reset
   resetButton = createButton('Reset');
   resetButton.position(sliderX + 80, sliderY + 100);
   resetButton.mousePressed(resetSimulation);
-
+  
   startTime = millis();
+  noLoop();  // Η προσομοίωση παραμένει στατική μέχρι να πατηθεί το "Start"
 }
 
 function draw() {
@@ -57,56 +60,56 @@ function draw() {
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
-  let phi = radians(phiDegrees); // μετατροπή μοίρων σε ακτίνια
+  let phi = radians(phiDegrees); // Μετατροπή μοίρων σε ακτίνια
   
-  // Υπολογισμός χρόνου και γωνίας
+  // Υπολογισμός χρόνου και γωνίας σύμφωνα με την εξίσωση ταλάντωσης y = A sin(ωt + φ)
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
   // --- Phase Diagram ---
   push();
-  // Μετατόπιση του κέντρου του κύκλου 60px δεξιότερα
+  // Κέντρο του κύκλου μετατοπισμένο 60px δεξιότερα (από x=100 σε x=160)
   let centerX = 160;
   let centerY = height / 2;
   
-  // Σχεδίαση κύκλου με ακτίνα ίση με το πλάτος (A)
+  // Σχεδίαση κύκλου με ακτίνα ίση με το πλάτος A
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Σχεδίαση αξόνων:
+  // Σχεδίαση αξόνων: ο οριζόντιος άξονας επεκτείνεται μέχρι (width + 60)
   stroke(150);
-  // Ο άξονας x επεκτείνεται από το 0 έως το (width + 60)
   line(0, centerY, width + 60, centerY);
-  // Ο άξονας y σχεδιάζεται γύρω από το κέντρο του κύκλου
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Σχεδίαση ακτίνας που ακολουθεί το κόκκινο σώμα (πράσινη γραμμή)
+  // Σχεδίαση ακτίνας από το κέντρο προς το σημείο που βρίσκεται το σώμα
   stroke(0, 150, 0);
-  // Ορίζουμε το σώμα σύμφωνα με το ημίτονο (y = A*sinθ) και το συνημίτονο για το x
-  let redX = centerX + A * cos(theta);
-  let redY = centerY + A * sin(theta);
-  line(centerX, centerY, redX, redY);
+  // Για αντίστροφη φορά (αντίθετα από τους δείκτες του ρολογιού) χρησιμοποιούμε:
+  // (cos(theta), sin(theta)) δίνει αντιθετική (counterclockwise) περιστροφή.
+  let redBodyX = centerX + A * cos(theta);
+  let redBodyY = centerY + A * sin(theta);
+  line(centerX, centerY, redBodyX, redBodyY);
   
-  // Σχεδίαση του μικρού κόκκινου σώματος
+  // Σχεδίαση του κόκκινου σώματος (γεμάτο)
   fill(255, 0, 0);
   noStroke();
-  ellipse(redX, redY, 15, 15);
+  ellipse(redBodyX, redBodyY, 15, 15);
   pop();
   
-  // --- Προσομοίωση Ελατηρίου-Σώματος ---
+  // --- Προσομοίωση Ελατηρίου-Σώματος (Blue) ---
   push();
-  let springX = width * 0.75;
-  let fixedY = 50;      // Θέση "ταβανιού"
-  let eqY = height / 2; // Θέση ισορροπίας στο κέντρο του καμβά
+  let springX = width * 0.75;  // x θέση του ελατηρίου
+  let fixedY = 50;           // θέση του "ταβανιού"
+  let eqY = height / 2;      // θέση ισορροπίας (οριζόντια)
   let baseLength = eqY - fixedY;
   
-  // Υπολογισμός μετατόπισης του σώματος (τώρα με ημίτονο)
+  // Υπολογισμός κατακόρυφης μετατόπισης του σώματος σύμφωνα με y = A sin(θ)
   let springDisplacement = A * sin(theta);
-  let massY = fixedY + baseLength + springDisplacement;
+  // Το σώμα ταλαντεύεται γύρω από το eqY: 
+  let massY = eqY + springDisplacement;
   
-  // Σχεδίαση ελατηρίου με περισσότερες σπείρες
+  // Σχεδίαση του ελατηρίου
   stroke(0);
   noFill();
   beginShape();
@@ -120,26 +123,52 @@ function draw() {
   vertex(springX, massY);
   endShape();
   
-  // Σχεδίαση του σώματος που ταλαντεύεται (μπλε κύκλος)
+  // Σχεδίαση του μπλε σώματος (με μέγεθος 40)
   fill(0, 0, 255);
   noStroke();
   ellipse(springX, massY, 40, 40);
   pop();
   
-  // Εμφάνιση των ετικετών των επιλογέων
+  // --- Πρόσθετο Σώμα που ταλαντεύεται στον άξονα ψ ---
+  push();
+  // Επιλέγουμε σταθερή οριζόντια θέση, π.χ. 100px πριν από το μπλε σώμα
+  let newBodyX = springX - 100;
+  // Η κατακόρυφη θέση ταλάντωσης έχει την ίδια εξίσωση: eqY + A*sin(θ)
+  let newBodyY = eqY + A * sin(theta);
+  
+  // Σχεδίαση του νέου σώματος με κόκκινο περίγραμμα και διάφανο γέμισμα (διάμετρος 15)
+  stroke(255, 0, 0);
+  noFill();
+  ellipse(newBodyX, newBodyY, 15, 15);
+  pop();
+  
+  // --- Διακεκκομένη γραμμή που ενώνει τα κέντρα του νέου σώματος και του μπλε σώματος ---
+  push();
+  stroke(255, 0, 0);
+  // Ορισμός dashed γραμμής χρησιμοποιώντας το drawingContext της p5.js
+  drawingContext.setLineDash([5, 5]);
+  line(newBodyX, newBodyY, springX, massY);
+  drawingContext.setLineDash([]);  // Επαναφορά στο κανονικό στυλ
+  pop();
+  
+  // Εμφάνιση ετικετών για τους επιλογείς
+  push();
   fill(0);
   noStroke();
   text("Πλάτος (A): " + A, sliderX + 180, sliderY + 15);
   text("Περίοδος (T): " + nf(T, 1, 2) + " s", sliderX + 180, sliderY + 45);
   text("Αρχική Φάση (φ): " + phiDegrees + "°", sliderX + 180, sliderY + 75);
+  pop();
 }
 
 function toggleSimulation() {
   if (isRunning) {
+    // Παύση: Αποθηκεύουμε το χρόνο που έχει παρέλθει
     startTimeOffset = millis() - startTime;
     noLoop();
     startPauseButton.html('Start');
   } else {
+    // Εκκίνηση: Προσαρμόζουμε το startTime ώστε να συνεχιστεί ομαλά
     startTime = millis() - startTimeOffset;
     loop();
     startPauseButton.html('Pause');
@@ -148,9 +177,12 @@ function toggleSimulation() {
 }
 
 function resetSimulation() {
-  // Επαναφορά του χρόνου στο 0
+  // Επαναφορά του χρόνου στο 0, χρησιμοποιώντας τις τρέχουσες τιμές των sliders
   startTime = millis();
   startTimeOffset = 0;
+  if (!isRunning) {
+    redraw();
+  }
 }
 </script>
 </body>
