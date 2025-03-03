@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Ταλάντωση και Αρχική Φάση</title>
-  <!-- Google Font Roboto για μοντέρνα εμφάνιση -->
+  <!-- Google Font Roboto for a modern look -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  <!-- Φόρτωση της βιβλιοθήκης p5.js -->
+  <!-- p5.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Στυλ παρόμοιο με το wavesfull.html */
+    /* Adopt a style similar to wavesfull.html */
     body, html {
       margin: 0;
       padding: 0;
@@ -17,42 +17,18 @@
       overflow: hidden;
       height: 100vh;
     }
-    .main-container {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      grid-template-columns: 1fr;
-      grid-template-areas:
-         "header"
-         "canvas-area";
-      height: 100vh;
-    }
-    .header {
-      grid-area: header;
-      background: #007BFF;
-      color: #fff;
-      text-align: center;
-      padding: 15px;
-      font-size: 24px;
-    }
-    .canvas-area {
-      grid-area: canvas-area;
-      position: relative;
-    }
+    /* All content is contained in the canvas */
   </style>
 </head>
 <body>
-  <div class="main-container">
-    <div class="header">Ταλάντωση και Αρχική Φάση</div>
-    <div class="canvas-area"></div>
-  </div>
 <script>
-// Global DOM elements for sliders and buttons
+/* Global DOM elements for sliders and buttons */
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 100, sliderY2 = 140, sliderY3 = 180; // vertical positions for the three sliders
+let sliderY1 = 100, sliderY2 = 130, sliderY3 = 160; // slider positions
 
-// Flags for elements shown inside the canvas (via checkboxes)
+// Flags for showing/hiding elements (controlled by checkboxes drawn inside the canvas)
 let showRedOutline = false;
 let showGraph = false;
 let showSpringBody = false;
@@ -61,10 +37,11 @@ let startTime, startTimeOffset = 0;
 let isRunning = false;
 
 function setup() {
+  // Create canvas that will include all content
   let canvas = createCanvas(800, 600);
-  canvas.parent(select('.canvas-area'));
+  canvas.parent(document.body);
   
-  // Create sliders
+  // Create DOM sliders – these are positioned relative to the window
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
@@ -80,7 +57,7 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Create buttons – positions will be set in draw()
+  // Create control buttons (their positions will be set later in draw)
   startPauseButton = createButton('Start');
   resetButton = createButton('Reset');
   
@@ -90,6 +67,12 @@ function setup() {
 
 function draw() {
   background(240);
+  
+  // Draw title at the top of the canvas (centered)
+  textAlign(CENTER, CENTER);
+  textSize(28);
+  fill(0);
+  text("Ταλάντωση και Αρχική Φάση", width/2, 40);
   
   // Get slider values
   let A = amplitudeSlider.value();
@@ -103,7 +86,7 @@ function draw() {
   
   // --- Phase Diagram (Circle) ---
   push();
-  let centerX = 160;
+  let centerX = 160; // center of circle (60px right from 100)
   let centerY = height / 2;
   
   stroke(0);
@@ -114,14 +97,15 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Labels in circle
+  // Labels on the circle
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("0", centerX - 10, centerY + 10); // "0" moved 10px left and 10px down
-  text("+A", centerX - 20 + 5, centerY - A - 5); // "+A" 5px right, 5px up
-  text("-A", centerX - 20 + 5, centerY + A + 5); // "-A" 5px right, 5px down
+  text("0", centerX - 10, centerY + 10); // moved 10px left and 10px down
+  text("+A", centerX - 20 + 5, centerY - A - 5); // shifted 5px right and 5px up
+  text("-A", centerX - 20 + 5, centerY + A + 5); // shifted 5px right and 5px down
   
+  // Compute position of red filled body
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
@@ -132,6 +116,7 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
+  // "Shadow": red outline (only if showRedOutline is true)
   if (showRedOutline) {
     push();
     noFill();
@@ -150,12 +135,12 @@ function draw() {
   }
   pop();
   
-  // --- Live Graph ---
+  // --- Live Graph of Position ---
   if (showGraph) {
     push();
     let graphOriginX = centerX + 120 + 40; // 320
     let graphWidth = 200;
-    let graphHeight = 240;
+    let graphHeight = 240; // covers values from -120 to +120
     let graphOriginY = centerY;
     let scaleY = (graphHeight / 2) / 120;
     
@@ -166,8 +151,10 @@ function draw() {
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);  // "ψ" 10px left of graphOriginX
-    text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10); // "t" 10px left of previous value
+    // "ψ" label: shifted 10px left from graphOriginX
+    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);
+    // "t" label: shifted 10px left from graphOriginX + graphWidth + 60
+    text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10);
     
     let n = floor(t / T);
     text("(" + n + "T, 0)", graphOriginX - 20, graphOriginY + 15);
@@ -224,6 +211,7 @@ function draw() {
     let centerY = height / 2;
     let massY = centerY - A * sin(theta);
     
+    // "Ταβάνι" effect: a horizontal line above the spring (only above the spring)
     stroke(50);
     strokeWeight(4);
     line(springX - 60, fixedY, springX + 60, fixedY);
@@ -260,13 +248,14 @@ function draw() {
   drawingContext.setLineDash([]);
   pop();
   
-  // --- Draw Checkboxes and Control Buttons inside Canvas ---
+  // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
   let btnY = baseCheckboxY() + 30;
+  // Position the Start/Pause and Reset buttons centered below the checkboxes
   startPauseButton.position(width/2 - 50, btnY);
   resetButton.position(width/2 + 10, btnY);
   
-  // --- Slider Labels (aligned with the DOM sliders) ---
+  // --- Slider Labels (aligned with their corresponding sliders) ---
   push();
   fill(0);
   noStroke();
@@ -287,11 +276,11 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Center group width ~400px
+  // Group them in a 400px wide area, centered
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
-  // Checkbox 1: "Προβολή" (formerly "Κόκκινο περίγραμμα")
+  // Checkbox 1: "Προβολή" (for red outline)
   fill(255);
   stroke(0);
   rect(baseX, baseY, boxSize, boxSize);
@@ -339,15 +328,18 @@ function mousePressed() {
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
+  // Checkbox 1: "Προβολή"
   if (mouseX >= baseX && mouseX <= baseX + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showRedOutline = !showRedOutline;
     redraw();
   }
+  // Checkbox 2: "Ελατήριο-Σώμα"
   let box2X = baseX + 150;
   if (mouseX >= box2X && mouseX <= box2X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showSpringBody = !showSpringBody;
     redraw();
   }
+  // Checkbox 3: "Γραφική Παράσταση"
   let box3X = baseX + 300;
   if (mouseX >= box3X && mouseX <= box3X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showGraph = !showGraph;
