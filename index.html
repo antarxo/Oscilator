@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Εφέ "Ταβανιού" και Checkboxes</title>
+  <title>Προσομοίωση με Εφέ "Ταβανιού" & Checkboxes – Ετικέτες</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -47,8 +47,8 @@ function setup() {
   resetButton.position(sliderX + 80, sliderY + 100);
   resetButton.mousePressed(resetSimulation);
   
-  // Checkboxes – τοποθετούνται σε μία γραμμή κάτω από το canvas (π.χ. στο y = height + 20)
-  let checkboxY = height + 20;
+  // Checkboxes – τοποθετούνται σε μία γραμμή κάτω από το canvas, στο ύψος (height + 50)
+  let checkboxY = height + 50;
   showRedOutlineCheckbox = createCheckbox("Κόκκινο περίγραμμα", false);
   showRedOutlineCheckbox.position(20, checkboxY);
   showRedOutlineCheckbox.changed(() => { redraw(); });
@@ -78,17 +78,17 @@ function draw() {
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
-  // --- Phase Diagram (αριστερή περιοχή) ---
+  // --- Phase Diagram (Κύκλος) ---
   push();
   let centerX = 160; // Κέντρο του κύκλου (με μετατόπιση 60px δεξιότερα από 100)
   let centerY = height / 2;
   
-  // Κύκλος με ακτίνα A
+  // Σχεδίαση κύκλου με ακτίνα A
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Αξόνες του κύκλου
+  // Σχεδίαση αξόνων του κύκλου
   stroke(150);
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
@@ -97,15 +97,16 @@ function draw() {
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("0", centerX, centerY); // στο κέντρο
-  text("+A", centerX - 20, centerY - A - 5);  // λίγο ψηλότερα
-  text("-A", centerX - 20, centerY + A + 5);  // λίγο χαμηλότερα
+  // Το "0" μετατοπίζεται λίγο κάτω και αριστερά
+  text("0", centerX - 10, centerY + 10);
+  text("+A", centerX - 20, centerY - A - 5);  // +A λίγο ψηλότερα
+  text("-A", centerX - 20, centerY + A + 5);  // -A λίγο χαμηλότερα
   
   // Θέση γεμάτου κόκκινου σώματος (x = centerX + A*cosθ, y = centerY - A*sinθ)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
-  // Σχεδίαση ακτίνας προς το γεμάτο κόκκινο σώμα
+  // Σχεδίαση ακτίνας από το κέντρο προς το γεμάτο κόκκινο σώμα
   stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
@@ -114,7 +115,7 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // Σχεδίαση "σκιάς" (κόκκινο περίγραμμα) μόνο αν είναι checked
+  // Σχεδίαση "σκιάς": σώμα με dotted κόκκινο περίγραμμα (εμφανίζεται μόνο αν το αντίστοιχο checkbox είναι checked)
   if (showRedOutlineCheckbox.checked()) {
     push();
     noFill();
@@ -124,7 +125,7 @@ function draw() {
     drawingContext.setLineDash([]);
     pop();
     
-    // Δotted (μαύρη) γραμμή που συνδέει το γεμάτο με τη "σκιά"
+    // Dotted (μαύρη) γραμμή που συνδέει το γεμάτο κόκκινο σώμα με τη "σκιά"
     push();
     stroke(0);
     drawingContext.setLineDash([2, 2]);
@@ -137,8 +138,6 @@ function draw() {
   // --- Γραφική Παράσταση Θέσης Live ---
   if (showGraphCheckbox.checked()) {
     push();
-    // Τοποθετούμε τον οριζόντιο άξονα του γραφήματος να συμπίπτει με τον x-άξονα του κύκλου.
-    // Ο κατακόρυφος άξονας τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px)
     let graphOriginX = centerX + 120 + 40; // 160 + 120 + 40 = 320
     let graphWidth = 200;
     let graphHeight = 240;  // για τιμές από -120 έως +120
@@ -154,24 +153,22 @@ function draw() {
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);  // "ψ": 10px δεξιότερα
-    text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);   // "t": 60px δεξιότερα από το αρχικό
-    
-    // Ετικέτες στο μηδέν και στο τελικό σημείο
+    text("ψ", graphOriginX + 10, graphOriginY - graphHeight / 2);  // "ψ": λίγο δεξιότερα
+    text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);   // "t": μετατοπισμένη 60px δεξιότερα
     let n = floor(t / T);
-    text("(" + n + "T, 0)", graphOriginX - 10, graphOriginY + 15);  
+    text("(" + n + "T, 0)", graphOriginX - 20, graphOriginY + 15);  // (nT,0): λίγο αριστερότερα
     text("(" + (n + 1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15);
     
-    // Οριζόντιες dotted γραμμές για τις θέσεις +A και -A στον άξονα ψ του γραφήματος
+    // Οριζόντιες dotted γραμμές για τις τιμές +A και -A στον άξονα ψ του γραφήματος
     push();
-    stroke(0, 0, 0, 100); // αχνή γραμμή
+    stroke(0, 0, 0, 100);
     drawingContext.setLineDash([2, 2]);
     line(graphOriginX, graphOriginY - A * scaleY, graphOriginX + graphWidth, graphOriginY - A * scaleY);
     line(graphOriginX, graphOriginY + A * scaleY, graphOriginX + graphWidth, graphOriginY + A * scaleY);
     drawingContext.setLineDash([]);
     pop();
     
-    // Ετικέτες για τις τιμές +A και -A στον άξονα ψ του γραφήματος
+    // Ετικέτες για τα +A και -A στον άξονα ψ του γραφήματος
     fill(0);
     textAlign(RIGHT, CENTER);
     text("+A", graphOriginX - 10, graphOriginY - A * scaleY);
@@ -221,32 +218,33 @@ function draw() {
     // Μετατόπιση του ελατηρίου 60px δεξιότερα
     let springX = width * 0.75 + 60;
     let fixedY = 50;
-    let eqY = centerY;
+    let centerY = height / 2;
+    // Το μπλε σώμα ταλαντεύεται: y = centerY - A*sinθ
+    let massY = centerY - A * sin(theta);
     
-    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής μόνο πάνω από το ελατήριο
+    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής μόνο πάνω από το ελατήριο (μόνο πάνω από το ελατήριο)
     stroke(50);
     strokeWeight(4);
     line(springX - 60, fixedY, springX + 60, fixedY);
     strokeWeight(1);
     
-    // Σχεδίαση του ελατηρίου
+    // Σχεδίαση του ελατηρίου: τώρα το τέλος του ελατηρίου συνδέεται με το massY
     stroke(0);
     noFill();
     beginShape();
     vertex(springX, fixedY);
     let numCoils = 12;
-    let coilLength = (eqY - fixedY - 20) / numCoils; // λίγο μικρότερο μήκος ώστε να υπάρχει απόσταση από το σώμα
+    let coilLength = (massY - fixedY) / numCoils; 
     for (let i = 1; i < numCoils; i++) {
       let xOffset = (i % 2 === 0) ? 20 : -20;
       vertex(springX + xOffset, fixedY + i * coilLength);
     }
-    vertex(springX, eqY);
+    vertex(springX, massY);
     endShape();
     
     // Σχεδίαση του μπλε σώματος
     fill(0, 0, 255);
     noStroke();
-    let massY = eqY - A * sin(theta);
     ellipse(springX, massY, 40, 40);
     pop();
   }
@@ -255,7 +253,6 @@ function draw() {
   push();
   stroke(0);
   drawingContext.setLineDash([1, 2]);
-  // Συνδέουμε το κέντρο της "σκιάς" (centerX, redBodyY) με το κέντρο του μπλε σώματος (μόνο αν εμφανίζεται το σύστημα ελατηρίου-σώματος)
   if (showSpringBodyCheckbox.checked()) {
     let springXForLine = width * 0.75 + 60;
     let massYForLine = centerY - A * sin(theta);
@@ -264,7 +261,7 @@ function draw() {
   drawingContext.setLineDash([]);
   pop();
   
-  // --- Ετικέτες για τους sliders (ελέγχου) ---
+  // --- Ετικέτες για τους sliders (περιοχή ελέγχου) ---
   push();
   fill(0);
   noStroke();
