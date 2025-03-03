@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Start/Pause, Reset, και Πρόσθετο Σώμα</title>
+  <title>Προσομοίωση με Start/Pause, Reset, και "Σκιά"</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -15,13 +15,13 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let startTime, startTimeOffset = 0;
-let isRunning = false;  // Αρχικά η προσομοίωση είναι παύση
+let isRunning = false;  // Η προσομοίωση ξεκινάει σε παύση
 let sliderX = 20, sliderY = 20;
 
 function setup() {
   createCanvas(800, 600);
   
-  // Slider για το πλάτος (A): τιμές 0 έως 120, αρχική τιμή 60
+  // Slider για το πλάτος (A): 0 έως 120, αρχική τιμή 60
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
@@ -50,19 +50,19 @@ function setup() {
   resetButton.mousePressed(resetSimulation);
   
   startTime = millis();
-  noLoop();  // Η προσομοίωση παραμένει στατική μέχρι να πατηθεί το "Start"
+  noLoop();  // Δεν ξεκινάει η προσομοίωση μέχρι να πατηθεί το "Start"
 }
 
 function draw() {
   background(240);
   
-  // Ανάγνωση τιμών από τους slider
+  // Ανάγνωση τιμών από τους sliders
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
-  let phi = radians(phiDegrees); // Μετατροπή μοίρων σε ακτίνια
+  let phi = radians(phiDegrees); // μετατροπή μοίρων σε ακτίνια
   
-  // Υπολογισμός χρόνου και γωνίας σύμφωνα με την εξίσωση ταλάντωσης y = A sin(ωt + φ)
+  // Υπολογισμός χρόνου και γωνίας σύμφωνα με την εξίσωση y = A sin(ωt + φ)
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
@@ -83,30 +83,38 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Σχεδίαση ακτίνας από το κέντρο προς το σημείο που βρίσκεται το σώμα
-  stroke(0, 150, 0);
-  // Για αντίστροφη φορά (αντίθετα από τους δείκτες του ρολογιού) χρησιμοποιούμε:
-  // (cos(theta), sin(theta)) δίνει αντιθετική (counterclockwise) περιστροφή.
+  // Σχεδίαση ακτίνας από το κέντρο προς το σημείο του κόκκινου σώματος
+  // Για αντίθετη φορά από τους δείκτες του ρολογιού (δηλαδή counterclockwise), χρησιμοποιούμε (cos, sin)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY + A * sin(theta);
+  stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
   // Σχεδίαση του κόκκινου σώματος (γεμάτο)
   fill(255, 0, 0);
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
+  
+  // --- "Σκιά": Πρόσθετο σώμα με κόκκινο περίγραμμα, ταλαντεύεται στον άξονα ψ ---
+  // Η "σκιά" είναι η κατακόρυφη προβολή του κόκκινου σώματος: έχει x = centerX και y = redBodyY
+  stroke(255, 0, 0);
+  noFill();
+  ellipse(centerX, redBodyY, 15, 15);
+  
+  // Σχεδίαση διακεκομμένης γραμμής (μαύρη, πιο dotted) που ενώνει το κόκκινο σώμα με τη "σκιά"
+  stroke(0);
+  drawingContext.setLineDash([2, 2]); 
+  line(redBodyX, redBodyY, centerX, redBodyY);
+  drawingContext.setLineDash([]); // Επαναφορά στο κανονικό στυλ
   pop();
   
   // --- Προσομοίωση Ελατηρίου-Σώματος (Blue) ---
   push();
   let springX = width * 0.75;  // x θέση του ελατηρίου
   let fixedY = 50;           // θέση του "ταβανιού"
-  let eqY = height / 2;      // θέση ισορροπίας (οριζόντια)
-  let baseLength = eqY - fixedY;
-  
-  // Υπολογισμός κατακόρυφης μετατόπισης του σώματος σύμφωνα με y = A sin(θ)
+  let eqY = height / 2;      // θέση ισορροπίας στο κέντρο του καμβά
+  // Η ταλάντωση στον ελατήριο ακολουθεί την ίδια εξίσωση: y = A sin(θ)
   let springDisplacement = A * sin(theta);
-  // Το σώμα ταλαντεύεται γύρω από το eqY: 
   let massY = eqY + springDisplacement;
   
   // Σχεδίαση του ελατηρίου
@@ -129,29 +137,7 @@ function draw() {
   ellipse(springX, massY, 40, 40);
   pop();
   
-  // --- Πρόσθετο Σώμα που ταλαντεύεται στον άξονα ψ ---
-  push();
-  // Επιλέγουμε σταθερή οριζόντια θέση, π.χ. 100px πριν από το μπλε σώμα
-  let newBodyX = springX - 100;
-  // Η κατακόρυφη θέση ταλάντωσης έχει την ίδια εξίσωση: eqY + A*sin(θ)
-  let newBodyY = eqY + A * sin(theta);
-  
-  // Σχεδίαση του νέου σώματος με κόκκινο περίγραμμα και διάφανο γέμισμα (διάμετρος 15)
-  stroke(255, 0, 0);
-  noFill();
-  ellipse(newBodyX, newBodyY, 15, 15);
-  pop();
-  
-  // --- Διακεκκομένη γραμμή που ενώνει τα κέντρα του νέου σώματος και του μπλε σώματος ---
-  push();
-  stroke(255, 0, 0);
-  // Ορισμός dashed γραμμής χρησιμοποιώντας το drawingContext της p5.js
-  drawingContext.setLineDash([5, 5]);
-  line(newBodyX, newBodyY, springX, massY);
-  drawingContext.setLineDash([]);  // Επαναφορά στο κανονικό στυλ
-  pop();
-  
-  // Εμφάνιση ετικετών για τους επιλογείς
+  // Εμφάνιση ετικετών για τους sliders
   push();
   fill(0);
   noStroke();
@@ -163,12 +149,12 @@ function draw() {
 
 function toggleSimulation() {
   if (isRunning) {
-    // Παύση: Αποθηκεύουμε το χρόνο που έχει παρέλθει
+    // Παύση: Αποθήκευση του χρόνου που έχει παρέλθει
     startTimeOffset = millis() - startTime;
     noLoop();
     startPauseButton.html('Start');
   } else {
-    // Εκκίνηση: Προσαρμόζουμε το startTime ώστε να συνεχιστεί ομαλά
+    // Εκκίνηση: Προσαρμογή του startTime ώστε να συνεχιστεί ομαλά
     startTime = millis() - startTimeOffset;
     loop();
     startPauseButton.html('Pause');
