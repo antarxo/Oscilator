@@ -15,7 +15,7 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let startTime, startTimeOffset = 0;
-let isRunning = false;  // Η προσομοίωση ξεκινάει σε παύση
+let isRunning = false;  // Ξεκινάει σε παύση
 let sliderX = 20, sliderY = 20;
 
 function setup() {
@@ -62,7 +62,7 @@ function draw() {
   let phiDegrees = phaseSlider.value();
   let phi = radians(phiDegrees); // μετατροπή μοίρων σε ακτίνια
   
-  // Υπολογισμός χρόνου και γωνίας σύμφωνα με την εξίσωση y = A sin(ωt + φ)
+  // Υπολογισμός χρόνου και γωνίας με εξίσωση ταλάντωσης y = A sin(ωt + φ)
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
@@ -83,37 +83,36 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Σχεδίαση ακτίνας από το κέντρο προς το σημείο του κόκκινου σώματος
-  // Για αντίθετη φορά από τους δείκτες του ρολογιού (δηλαδή counterclockwise), χρησιμοποιούμε (cos, sin)
+  // Υπολογισμός θέσης του κόκκινου σώματος (περιστροφή με φορά ρολογιού)
   let redBodyX = centerX + A * cos(theta);
-  let redBodyY = centerY + A * sin(theta);
+  let redBodyY = centerY - A * sin(theta);
+  
+  // Σχεδίαση ακτίνας από το κέντρο προς το κόκκινο σώμα
   stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
-  // Σχεδίαση του κόκκινου σώματος (γεμάτο)
+  // Σχεδίαση του γεμάτου κόκκινου σώματος
   fill(255, 0, 0);
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
   // --- "Σκιά": Πρόσθετο σώμα με κόκκινο περίγραμμα, ταλαντεύεται στον άξονα ψ ---
-  // Η "σκιά" είναι η κατακόρυφη προβολή του κόκκινου σώματος: έχει x = centerX και y = redBodyY
+  // Η "σκιά" είναι η κατακόρυφη προβολή: έχει x = centerX και y = redBodyY
   stroke(255, 0, 0);
   noFill();
   ellipse(centerX, redBodyY, 15, 15);
-  
-  // Σχεδίαση διακεκομμένης γραμμής (μαύρη, πιο dotted) που ενώνει το κόκκινο σώμα με τη "σκιά"
-  stroke(0);
-  drawingContext.setLineDash([2, 2]); 
-  line(redBodyX, redBodyY, centerX, redBodyY);
-  drawingContext.setLineDash([]); // Επαναφορά στο κανονικό στυλ
   pop();
+  
+  // Αποθήκευση των συντεταγμένων της "σκιάς" για τη σύνδεση
+  let shadowX = centerX;
+  let shadowY = redBodyY;
   
   // --- Προσομοίωση Ελατηρίου-Σώματος (Blue) ---
   push();
   let springX = width * 0.75;  // x θέση του ελατηρίου
-  let fixedY = 50;           // θέση του "ταβανιού"
-  let eqY = height / 2;      // θέση ισορροπίας στο κέντρο του καμβά
-  // Η ταλάντωση στον ελατήριο ακολουθεί την ίδια εξίσωση: y = A sin(θ)
+  let fixedY = 50;           // θέση "ταβανιού"
+  let eqY = height / 2;      // θέση ισορροπίας (κέντρο του καμβά)
+  // Η ταλάντωση στον ελατήριο ακολουθεί y = A sin(θ)
   let springDisplacement = A * sin(theta);
   let massY = eqY + springDisplacement;
   
@@ -135,6 +134,15 @@ function draw() {
   fill(0, 0, 255);
   noStroke();
   ellipse(springX, massY, 40, 40);
+  pop();
+  
+  // --- Διακεκομμένη (dotted) γραμμή που συνδέει το κέντρο της "σκιάς" με το κέντρο του μπλε σώματος ---
+  push();
+  stroke(0);
+  // Ορισμός dotted γραμμής (μικρότερα διαστήματα)
+  drawingContext.setLineDash([2, 2]);
+  line(shadowX, shadowY, springX, massY);
+  drawingContext.setLineDash([]);  // Επαναφορά κανονικού στυλ
   pop();
   
   // Εμφάνιση ετικετών για τους sliders
@@ -163,7 +171,7 @@ function toggleSimulation() {
 }
 
 function resetSimulation() {
-  // Επαναφορά του χρόνου στο 0, χρησιμοποιώντας τις τρέχουσες τιμές των sliders
+  // Επαναφορά του χρόνου στο 0, με τις τρέχουσες τιμές των sliders
   startTime = millis();
   startTimeOffset = 0;
   if (!isRunning) {
