@@ -14,23 +14,24 @@
 <script>
 let amplitudeSlider, periodSlider, phaseSlider;
 let startTime;
+let sliderX = 20, sliderY = 20; // σταθερές για τη θέση των επιλογέων
 
 function setup() {
   createCanvas(800, 600);
   
-  // Δημιουργία slider για το πλάτος (σε pixels)
+  // Slider για το πλάτος (σε pixels)
   amplitudeSlider = createSlider(20, 200, 100, 1);
-  amplitudeSlider.position(20, 20);
+  amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
 
-  // Δημιουργία slider για την περίοδο (σε δευτερόλεπτα)
+  // Slider για την περίοδο (σε δευτερόλεπτα)
   periodSlider = createSlider(0.5, 5, 2, 0.1);
-  periodSlider.position(20, 50);
+  periodSlider.position(sliderX, sliderY + 30);
   periodSlider.style('width', '160px');
 
-  // Δημιουργία slider για την αρχική φάση (σε ακτίνια)
+  // Slider για την αρχική φάση (σε ακτίνια)
   phaseSlider = createSlider(0, TWO_PI, 0, 0.01);
-  phaseSlider.position(20, 80);
+  phaseSlider.position(sliderX, sliderY + 60);
   phaseSlider.style('width', '160px');
 
   startTime = millis();
@@ -39,19 +40,19 @@ function setup() {
 function draw() {
   background(240);
   
-  // Ανάγνωση τιμών από τους slider
+  // Ανάγνωση τιμών από τους επιλογείς
   let A = amplitudeSlider.value();      // πλάτος της ταλάντωσης
-  let T = periodSlider.value();           // περίοδος της ταλάντωσης (δευτερόλεπτα)
+  let T = periodSlider.value();           // περίοδος (δευτερόλεπτα)
   let phi = phaseSlider.value();          // αρχική φάση (σε ακτίνια)
   
   // Υπολογισμός χρόνου και γωνίας
-  let t = (millis() - startTime) / 1000;    // χρόνος σε δευτερόλεπτα
+  let t = (millis() - startTime) / 1000;    // σε δευτερόλεπτα
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
-  // --- Τμήμα 1: Κυκλικό διάγραμμα (Phase diagram) ---
+  // --- Κυκλικό Διάγραμμα (Phase diagram) ---
   push();
-  // Θέση του κύκλου στο αριστερό μέρος του καμβά
+  // Θέση του κύκλου στο αριστερό μέρος
   let centerX = 100;
   let centerY = height / 2;
   
@@ -60,37 +61,43 @@ function draw() {
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Σχεδίαση των αξόνων x και y στο κέντρο του κύκλου
+  // Σχεδίαση αξόνων x και y στο κέντρο του κύκλου
   stroke(150);
-  line(centerX - A - 10, centerY, centerX + A + 10, centerY);
+  // Επέκταση του οριζόντιου άξονα ώστε να ξεπερνά το σώμα
+  line(centerX - A - 20, centerY, centerX + A + 20, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Σχεδίαση του σώματος που διαγράφει την κυκλική τροχιά
+  // Σχεδίαση ακτίνας που παρακολουθεί το κόκκινο σώμα
+  stroke(0, 150, 0);
+  line(centerX, centerY, centerX + A * sin(theta), centerY + A * cos(theta));
+  
+  // Σχεδίαση του κόκκινου σώματος (λιγότερο διαμετρήματος)
   fill(255, 0, 0);
   noStroke();
-  // Υπολογισμός θέσης με χρήση sin για το x και cos για το y
   let circleX = centerX + A * sin(theta);
   let circleY = centerY + A * cos(theta);
-  ellipse(circleX, circleY, 20, 20);
+  ellipse(circleX, circleY, 15, 15);  // μικρότερο από πριν
   pop();
   
-  // --- Τμήμα 2: Προσομοίωση ελατηρίου-σωματος ---
+  // --- Προσομοίωση Ελατηρίου-Σώματος ---
   push();
-  // Ορισμός θέσης του ελατηρίου στη δεξιά πλευρά του καμβά
+  // Τοποθέτηση του ελατηρίου στη δεξιά πλευρά
   let springX = width * 0.75;
-  let fixedY = 50;        // Σταθερή θέση στο πάνω μέρος (ταβάνι)
-  let baseLength = 150;   // Βασικό μήκος του ελατηρίου (χωρίς ταλαντώσεις)
+  let fixedY = 50;        // Σταθερή θέση (ταβάνι)
+  // Ορίζουμε την ισορροπία να βρίσκεται στο κέντρο του καμβά (height/2)
+  let eqY = height / 2;
+  let baseLength = eqY - fixedY;
   
-  // Υπολογισμός της κατακόρυφης μετατόπισης του σώματος (ταλάντωση)
+  // Υπολογισμός κατακόρυφης μετατόπισης (ταλάντωση)
   let springDisplacement = A * cos(theta);
   let massY = fixedY + baseLength + springDisplacement;
   
-  // Σχεδίαση του ελατηρίου ως μια σειρά από συνδεδεμένες κορυφές
+  // Σχεδίαση του ελατηρίου με περισσότερες σπείρες
   stroke(0);
   noFill();
   beginShape();
   vertex(springX, fixedY);
-  let numCoils = 10;
+  let numCoils = 12;
   let coilLength = (massY - fixedY) / numCoils;
   for (let i = 1; i < numCoils; i++) {
     let xOffset = (i % 2 === 0) ? 20 : -20;
@@ -99,18 +106,18 @@ function draw() {
   vertex(springX, massY);
   endShape();
   
-  // Σχεδίαση του σώματος που κρέμεται από το ελατήριο
+  // Σχεδίαση του σώματος που ταλαντεύεται (θεωρούμενο ότι έχει κέντρο πάνω στον άξονα x)
   fill(0, 0, 255);
   noStroke();
   ellipse(springX, massY, 40, 40);
   pop();
   
-  // Εμφάνιση των τιμών των παραμέτρων για αναφορά
+  // Εμφάνιση των ετικετών των επιλογέων (μετατοπισμένες ώστε να μην καλύπτονται)
   fill(0);
   noStroke();
-  text("Πλάτος (A): " + A, amplitudeSlider.x * 1.2, amplitudeSlider.y + 15);
-  text("Περίοδος (T): " + nf(T, 1, 2) + " s", periodSlider.x * 1.2, periodSlider.y + 15);
-  text("Αρχική Φάση (φ): " + nf(phi, 1, 2) + " rad", phaseSlider.x * 1.2, phaseSlider.y + 15);
+  text("Πλάτος (A): " + A, sliderX + 180, sliderY + 15);
+  text("Περίοδος (T): " + nf(T, 1, 2) + " s", sliderX + 180, sliderY + 45);
+  text("Αρχική Φάση (φ): " + nf(phi, 1, 2) + " rad", sliderX + 180, sliderY + 75);
 }
 </script>
 </body>
