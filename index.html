@@ -22,8 +22,8 @@ let startTimeOffset = 0;
 function setup() {
   createCanvas(800, 600);
   
-  // Slider για το πλάτος (A)
-  amplitudeSlider = createSlider(20, 200, 100, 1);
+  // Slider για το πλάτος (A) από 0 έως 120, προεπιλεγμένη τιμή 60
+  amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY);
   amplitudeSlider.style('width', '160px');
 
@@ -32,8 +32,8 @@ function setup() {
   periodSlider.position(sliderX, sliderY + 30);
   periodSlider.style('width', '160px');
 
-  // Slider για την αρχική φάση (φ)
-  phaseSlider = createSlider(0, TWO_PI, 0, 0.01);
+  // Slider για την αρχική φάση (φ) σε μοίρες από 0 έως 299
+  phaseSlider = createSlider(0, 299, 0, 1);
   phaseSlider.position(sliderX, sliderY + 60);
   phaseSlider.style('width', '160px');
 
@@ -56,8 +56,9 @@ function draw() {
   // Ανάγνωση τιμών από τους slider
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
-  let phi = phaseSlider.value();
-
+  let phiDegrees = phaseSlider.value();
+  let phi = radians(phiDegrees); // μετατροπή μοίρων σε ακτίνια
+  
   // Υπολογισμός χρόνου και γωνίας
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
@@ -65,7 +66,7 @@ function draw() {
   
   // --- Phase Diagram ---
   push();
-  // Ο κύκλος μετακινείται 60px δεξιότερα (πρωταρχική θέση: 100, τώρα 100+60=160)
+  // Μετατόπιση του κέντρου του κύκλου 60px δεξιότερα
   let centerX = 160;
   let centerY = height / 2;
   
@@ -83,14 +84,15 @@ function draw() {
   
   // Σχεδίαση ακτίνας που ακολουθεί το κόκκινο σώμα (πράσινη γραμμή)
   stroke(0, 150, 0);
-  line(centerX, centerY, centerX + A * sin(theta), centerY + A * cos(theta));
+  // Ορίζουμε το σώμα σύμφωνα με το ημίτονο (y = A*sinθ) και το συνημίτονο για το x
+  let redX = centerX + A * cos(theta);
+  let redY = centerY + A * sin(theta);
+  line(centerX, centerY, redX, redY);
   
-  // Σχεδίαση του μικρού κόκκινου σώματος που διαγράφει την τροχιά
+  // Σχεδίαση του μικρού κόκκινου σώματος
   fill(255, 0, 0);
   noStroke();
-  let circleX = centerX + A * sin(theta);
-  let circleY = centerY + A * cos(theta);
-  ellipse(circleX, circleY, 15, 15);
+  ellipse(redX, redY, 15, 15);
   pop();
   
   // --- Προσομοίωση Ελατηρίου-Σώματος ---
@@ -100,8 +102,8 @@ function draw() {
   let eqY = height / 2; // Θέση ισορροπίας στο κέντρο του καμβά
   let baseLength = eqY - fixedY;
   
-  // Υπολογισμός μετατόπισης του σώματος λόγω ταλάντωσης
-  let springDisplacement = A * cos(theta);
+  // Υπολογισμός μετατόπισης του σώματος (τώρα με ημίτονο)
+  let springDisplacement = A * sin(theta);
   let massY = fixedY + baseLength + springDisplacement;
   
   // Σχεδίαση ελατηρίου με περισσότερες σπείρες
@@ -124,22 +126,20 @@ function draw() {
   ellipse(springX, massY, 40, 40);
   pop();
   
-  // Εμφάνιση των ετικετών των επιλογέων (μετατοπισμένες ώστε να μην καλύπτονται)
+  // Εμφάνιση των ετικετών των επιλογέων
   fill(0);
   noStroke();
   text("Πλάτος (A): " + A, sliderX + 180, sliderY + 15);
   text("Περίοδος (T): " + nf(T, 1, 2) + " s", sliderX + 180, sliderY + 45);
-  text("Αρχική Φάση (φ): " + nf(phi, 1, 2) + " rad", sliderX + 180, sliderY + 75);
+  text("Αρχική Φάση (φ): " + phiDegrees + "°", sliderX + 180, sliderY + 75);
 }
 
 function toggleSimulation() {
   if (isRunning) {
-    // Αποθήκευση του χρόνου που έχει παρέλθει
     startTimeOffset = millis() - startTime;
     noLoop();
     startPauseButton.html('Start');
   } else {
-    // Επανεκκίνηση με διατήρηση του offset
     startTime = millis() - startTimeOffset;
     loop();
     startPauseButton.html('Pause');
