@@ -8,7 +8,7 @@
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Στυλ εμπνευσμένο από wavesfull.html */
+    /* Στυλ εμπνευσμένο από το wavesfull.html */
     body, html {
       margin: 0;
       padding: 0;
@@ -17,22 +17,44 @@
       overflow: hidden;
       height: 100vh;
     }
-    /* Όλο το περιεχόμενο θα βρίσκεται μέσα στον καμβά */
-    canvas {
-      display: block;
+    .main-container {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      grid-template-columns: 1fr;
+      grid-template-areas:
+         "header"
+         "canvas-area";
+      height: 100vh;
     }
+    .header {
+      grid-area: header;
+      background: #007BFF;
+      color: #fff;
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+    }
+    .canvas-area {
+      grid-area: canvas-area;
+      position: relative;
+    }
+    /* Τα DOM στοιχεία (sliders, buttons) δεν εμφανίζονται μέσα στον καμβά, αλλά τοποθετούνται πάνω από αυτόν */
   </style>
 </head>
 <body>
+  <div class="main-container">
+    <div class="header">Ταλάντωση και Αρχική Φάση</div>
+    <div class="canvas-area"></div>
+  </div>
 <script>
-// Global DOM elements για sliders και κουμπιά
+/* Global DOM elements για sliders και κουμπιά */
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 100, sliderY2 = 120, sliderY3 = 140; // Νέες τιμές: μικρότερο κενό, πρώτη στο 100
+let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Νέες θέσεις: ανεβασμένες κατά 40px
 
-// Flags για εμφάνιση στοιχείων (μέσω checkboxes που σχεδιάζονται μέσα στο canvas)
-let showRedOutline = false; // "Προβολή"
+// Flags για εμφάνιση στοιχείων (μέσω checkboxes σχεδιασμένων μέσα στον καμβά)
+let showRedOutline = false; // για "Προβολή"
 let showSpringBody = false;
 let showGraph = false;
 
@@ -40,11 +62,10 @@ let startTime, startTimeOffset = 0;
 let isRunning = false;
 
 function setup() {
-  // Δημιουργούμε έναν καμβά 800x600 που θα περιέχει όλο το περιεχόμενο
   let canvas = createCanvas(800, 600);
-  canvas.parent(document.body);
+  canvas.parent(select('.canvas-area'));
   
-  // Δημιουργία DOM sliders (από 20, sliderY)
+  // Δημιουργία DOM sliders
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
@@ -60,9 +81,9 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Δημιουργία κουμπιών Start/Pause και Reset
+  // Δημιουργία κουμπιών Start/Pause και Reset (θέσεις θα οριστούν στο draw)
   startPauseButton = createButton('Start');
-  startPauseButton.style('position', 'absolute'); // Absolute positioning
+  startPauseButton.style('position', 'absolute');
   startPauseButton.mousePressed(toggleSimulation);
   
   resetButton = createButton('Reset');
@@ -76,13 +97,9 @@ function setup() {
 function draw() {
   background(240);
   
-  // Σχεδίαση τίτλου στο πάνω μέρος του καμβά
-  textAlign(CENTER, CENTER);
-  textSize(20);
-  fill(0);
-  text("Ταλάντωση και Αρχική Φάση", width/2, 40);
+  // Δεν σχεδιάζουμε τίτλο μέσα στον καμβά, ώστε να παραμένει στο header.
   
-  // Λήψη τιμών από τα sliders
+  // Λήψη τιμών
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
@@ -97,6 +114,7 @@ function draw() {
   let centerX = 160;
   let centerY = height / 2;
   
+  textSize(14); // Επιστροφή στα μικρότερα μεγέθη
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
@@ -156,7 +174,9 @@ function draw() {
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
+    // "ψ" ετικέτα: 10px αριστερότερα
     text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);
+    // "t" ετικέτα: 10px αριστερότερα από το προηγούμενο
     text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10);
     
     let n = floor(t / T);
@@ -214,7 +234,6 @@ function draw() {
     let centerY = height / 2;
     let massY = centerY - A * sin(theta);
     
-    // "Ταβάνι": οριζόντια γραμμή πάνω μόνο από το ελατήριο (μόνο πάνω από το ελατήριο)
     stroke(50);
     strokeWeight(4);
     line(springX - 60, fixedY, springX + 60, fixedY);
@@ -239,7 +258,7 @@ function draw() {
     pop();
   }
   
-  // --- Dotted line connecting "shadow" and blue body ---
+  // --- Dotted line connecting "shadow" with blue body ---
   push();
   stroke(0);
   drawingContext.setLineDash([1, 2]);
@@ -254,13 +273,10 @@ function draw() {
   // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
   let btnY = baseCheckboxY() + 30;
-  // Τα κουμπιά στοιχίζονται στο κέντρο του καμβά, κάτω από τα checkboxes
   startPauseButton.position(width/2 - 50, btnY);
   resetButton.position(width/2 + 10, btnY);
-  startPauseButton.style('position','absolute');
-  resetButton.style('position','absolute');
   
-  // --- Slider Labels (ευθυγραμμισμένες με τους αντίστοιχους DOM sliders) ---
+  // --- Slider Labels (aligned with the corresponding sliders) ---
   push();
   fill(0);
   noStroke();
@@ -281,7 +297,6 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Ομαδοποίηση: συνολικό πλάτος περίπου 400px, κεντραρισμένο
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
