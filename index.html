@@ -29,7 +29,7 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Έχουν ανέβει κατά 40px
+let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Ανέβασμα κατά 40px
 
 // Flags για εμφάνιση στοιχείων (μέσω checkboxes μέσα στον καμβά)
 let showRedOutline = false; // "Προβολή"
@@ -69,7 +69,7 @@ function setup() {
   startPauseButton.style('padding', '8px 12px');
   startPauseButton.style('font-size', '16px');
   startPauseButton.style('cursor', 'pointer');
-  startPauseButton.style('width', '100px');  // Σταθερό πλάτος
+  startPauseButton.style('width', '100px');
   startPauseButton.mousePressed(toggleSimulation);
   
   resetButton = createButton('Reset');
@@ -81,7 +81,7 @@ function setup() {
   resetButton.style('padding', '8px 12px');
   resetButton.style('font-size', '16px');
   resetButton.style('cursor', 'pointer');
-  resetButton.style('width', '100px');  // Σταθερό πλάτος
+  resetButton.style('width', '100px');
   resetButton.mousePressed(resetSimulation);
   
   startTime = millis();
@@ -274,9 +274,10 @@ function draw() {
   
   // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
-  let btnY = baseCheckboxY() + 60;
+  let btnY = baseCheckboxY() + 60; // Αυξημένο κενό μεταξύ checkboxes και κουμπιών
+  // Ενημέρωση θέσεων κουμπιών με σταθερό πλάτος και το αυξημένο κενό
   startPauseButton.position(width/2 - 50, btnY);
-  resetButton.position(width/2 + 20, btnY); // 10px αύξηση στο reset (δηλαδή 20px από το κέντρο)
+  resetButton.position(width/2 + 30, btnY);
   
   // --- Slider Labels (aligned with each slider) ---
   push();
