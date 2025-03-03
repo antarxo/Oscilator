@@ -29,7 +29,7 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 60, sliderY2 = 80, sliderY3 = 100; // Ανέβασμα κατά 40px
+let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Ανέβασμα κατά 40px
 
 // Flags για εμφάνιση στοιχείων (μέσω checkboxes μέσα στον καμβά)
 let showRedOutline = false; // "Προβολή"
@@ -44,12 +44,13 @@ function setup() {
   canvas.parent(document.body);
   
   // Δημιουργία DOM sliders
-  amplitudeSlider = createSlider(0, 120, 60, 1);
+  amplitudeSlider = createSlider(0, 100, 60, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
   amplitudeSlider.input(() => { if (!isRunning) redraw(); });
   
-  periodSlider = createSlider(0.5, 5, 2, 0.1);
+  // Εύρος περιόδου: από 0.1 έως 10
+  periodSlider = createSlider(0.1, 10, 2, 0.1);
   periodSlider.position(sliderX, sliderY2);
   periodSlider.style('width', '160px');
   periodSlider.input(() => { if (!isRunning) redraw(); });
@@ -62,7 +63,6 @@ function setup() {
   // Δημιουργία κουμπιών Start/Pause και Reset
   startPauseButton = createButton('Start');
   startPauseButton.style('position', 'absolute');
-  // Εφαρμογή στυλ κουμπιών (όπως στο wavesfull.html)
   startPauseButton.style('background', '#007BFF');
   startPauseButton.style('color', '#fff');
   startPauseButton.style('border', 'none');
@@ -117,7 +117,7 @@ function draw() {
   let centerX = 160;
   let centerY = height / 2;
   
-  textSize(14); // Επιστροφή στο αρχικό μέγεθος γραμματοσειράς
+  textSize(14);
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
@@ -164,7 +164,7 @@ function draw() {
   // --- Live Graph ---
   if (showGraph) {
     push();
-    let graphOriginX = centerX + 120 + 40; // 320
+    let graphOriginX = centerX + 120 + 40;
     let graphWidth = 200;
     let graphHeight = 240;
     let graphOriginY = centerY;
@@ -273,7 +273,7 @@ function draw() {
   
   // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
-  let btnY = baseCheckboxY() + 60; // αυξημένο κενό μεταξύ checkboxes και κουμπιών
+  let btnY = baseCheckboxY() + 60; // Αυξημένο κενό μεταξύ checkboxes και κουμπιών
   startPauseButton.position(width/2 - 50, btnY);
   resetButton.position(width/2 + 10, btnY);
   
@@ -298,7 +298,7 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Ομαδοποίηση: συνολικό πλάτος περίπου 400px, κεντραρισμένο
+  // Ομαδοποίηση: περίπου 400px πλάτος, κεντραρισμένο
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
