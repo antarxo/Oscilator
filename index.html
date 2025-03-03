@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Ομοιόμορφη Εξίσωση Ταλάντωσης</title>
+  <title>Προσομοίωση με Dotted Συνδέσεις</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -15,7 +15,7 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let startTime, startTimeOffset = 0;
-let isRunning = false; // Η προσομοίωση ξεκινάει σε παύση
+let isRunning = false; // Ξεκινάει σε παύση
 let sliderX = 20, sliderY = 20;
 
 function setup() {
@@ -62,7 +62,7 @@ function draw() {
   let phiDegrees = phaseSlider.value();
   let phi = radians(phiDegrees);
   
-  // Υπολογισμός χρόνου και γωνίας με εξίσωση: θ = ωt + φ, όπου ω = 2π/T
+  // Υπολογισμός χρόνου και γωνίας: θ = ωt + φ, όπου ω = 2π/T
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
@@ -83,11 +83,11 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Υπολογισμός θέσης του κόκκινου σώματος (με κλασική μέτρηση γωνιών)
+  // Υπολογισμός θέσης του γεμάτου κόκκινου σώματος (με κλασική μέτρηση)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
-  // Σχεδίαση ακτίνας από το κέντρο προς το κόκκινο σώμα
+  // Σχεδίαση ακτίνας από το κέντρο προς το γεμάτο κόκκινο σώμα
   stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
@@ -96,22 +96,34 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // Σχεδίαση της "σκιάς": σώμα με κόκκινο περίγραμμα, ταλαντεύεται πάνω στον άξονα ψ (προβολή του κόκκινου σώματος)
-  stroke(255, 0, 0);
+  // Σχεδίαση της "σκιάς": σώμα με κόκκινο περίγραμμα, ταλαντεύεται στον άξονα ψ (προβολή του γεμάτου σώματος)
+  push();
   noFill();
+  stroke(255, 0, 0);
+  drawingContext.setLineDash([2, 2]); // Dotted περίγραμμα
   ellipse(centerX, redBodyY, 15, 15);
+  drawingContext.setLineDash([]); // Επαναφορά στο κανονικό στυλ
   pop();
   
-  // Για τη διακεκομμένη γραμμή: αποθηκεύουμε το κέντρο της "σκιάς"
+  // Σχεδίαση dotted γραμμής (μαύρη) που συνδέει το γεμάτο κόκκινο σώμα και τη "σκιά"
+  push();
+  stroke(0);
+  drawingContext.setLineDash([2, 2]);
+  line(redBodyX, redBodyY, centerX, redBodyY);
+  drawingContext.setLineDash([]);
+  pop();
+  pop();
+  
+  // Αποθήκευση των συντεταγμένων της "σκιάς" για τη σύνδεση με το μπλε σώμα
   let shadowX = 160;
-  let shadowY = centerY - A * sin(theta);
+  let shadowY = redBodyY;
   
   // --- Προσομοίωση Ελατηρίου (Blue Body) ---
   push();
   let springX = width * 0.75;  // x θέση του ελατηρίου
-  let fixedY = 50;           // θέση του "ταβανιού"
+  let fixedY = 50;           // θέση "ταβανιού"
   let eqY = height / 2;      // θέση ισορροπίας (κέντρο του καμβά)
-  // Το σώμα ταλαντεύεται με την ίδια εξίσωση (κλασική μέτρηση): για θετικό sin, μετατοπίζεται προς τα πάνω
+  // Το σώμα ταλαντεύεται με την ίδια εξίσωση: y = eqY - A*sinθ (κατά κλασική μέτρηση, θετικό sin μετατοπίζει προς τα πάνω)
   let massY = eqY - A * sin(theta);
   
   // Σχεδίαση του ελατηρίου
@@ -128,7 +140,7 @@ function draw() {
   vertex(springX, massY);
   endShape();
   
-  // Σχεδίαση του μπλε σώματος (ολόκληρο σώμα)
+  // Σχεδίαση του μπλε σώματος
   fill(0, 0, 255);
   noStroke();
   ellipse(springX, massY, 40, 40);
@@ -139,7 +151,7 @@ function draw() {
   stroke(0);
   drawingContext.setLineDash([1, 2]); // Πιο dotted
   line(shadowX, shadowY, width * 0.75, massY);
-  drawingContext.setLineDash([]);  // Επαναφορά στο κανονικό στυλ
+  drawingContext.setLineDash([]);
   pop();
   
   // Εμφάνιση ετικετών για τους sliders
