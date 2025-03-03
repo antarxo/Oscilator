@@ -69,7 +69,7 @@ function draw() {
   
   // --- Phase Diagram (Κύκλος) ---
   push();
-  // Ορίζουμε το κέντρο του κύκλου: centerX μετατοπισμένο 60px δεξιότερα (π.χ. 160), centerY στο κέντρο του καμβά
+  // Ορίζουμε το κέντρο του κύκλου: μετατοπισμένο 60px δεξιότερα (centerX = 160), centerY = height/2
   let centerX = 160;
   let centerY = height / 2;
   
@@ -78,18 +78,18 @@ function draw() {
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
   
-  // Σχεδίαση αξόνων: ο οριζόντιος από 0 έως (width + 60)
+  // Σχεδίαση αξόνων: ο οριζόντιος άξονας από 0 έως (width + 60)
   stroke(150);
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Ετικέτες για το phase diagram:
+  // Ετικέτες στο phase diagram:
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("0", centerX, centerY);                     // στο κέντρο
-  text("+A", centerX - 20, centerY - A);             // στο πάνω σημείο
-  text("-A", centerX - 20, centerY + A);             // στο κάτω σημείο
+  text("0", centerX, centerY);  // στο κέντρο
+  text("+A", centerX - 20, centerY - A - 5);  // +A: λίγο ψηλότερα
+  text("-A", centerX - 20, centerY + A + 5);  // -A: λίγο χαμηλότερα
   
   // Θέση γεμάτου κόκκινου σώματος (κλασική μέτρηση: x = centerX + A*cosθ, y = centerY - A*sinθ)
   let redBodyX = centerX + A * cos(theta);
@@ -135,24 +135,39 @@ function draw() {
   
   // Σχεδίαση αξόνων γραφήματος
   stroke(0);
-  // Κατακόρυφος (y) άξονας
   line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
-  // Οριζόντιος (x) άξονας
   line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
   
   // Ετικέτες στους άξονες του γραφήματος:
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("ψ", graphOriginX - 20, graphOriginY - graphHeight / 2);        // ετικέτα για τον κατακόρυφο άξονα
-  text("t", graphOriginX + graphWidth + 10, graphOriginY + 10);           // ετικέτα για τον οριζόντιο άξονα
+  text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);   // "ψ": μετατοπισμένη 10px δεξιότερα
+  text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);      // "t": μετατοπισμένη 60px δεξιότερα (αρχικά +10 → +70)
   
   // Ετικέτες στο μηδέν και στο τελικό σημείο του γραφήματος:
-  let n = floor(t / T); // αριθμός περιόδων που έχουν περάσει
-  text("(" + n + "T, 0)", graphOriginX, graphOriginY + 15);               // στο αριστερό σημείο του γραφήματος
-  text("(" + (n+1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15); // στο δεξί σημείο του γραφήματος
+  let n = floor(t / T);
+  text("(" + n + "T, 0)", graphOriginX - 10, graphOriginY + 15);  // (nT,0): μετατοπισμένη 10px αριστερότερα
+  text("(" + (n + 1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15);
   
-  // Live σχεδίαση της καμπύλης: σχεδιάζουμε για t από 0 έως currentGraphTime = min(t, T)
+  // Δύο οριζόντιες dotted γραμμές που δείχνουν τις θέσεις των πλατών στον άξονα ψ του γραφήματος:
+  push();
+  stroke(0, 0, 0, 100); // αχνή dotted γραμμή
+  drawingContext.setLineDash([2, 2]);
+  // Στο σημείο του +A: y = graphOriginY - (A * scaleY)
+  line(graphOriginX, graphOriginY - A * scaleY, graphOriginX + graphWidth, graphOriginY - A * scaleY);
+  // Στο σημείο του -A: y = graphOriginY + (A * scaleY)
+  line(graphOriginX, graphOriginY + A * scaleY, graphOriginX + graphWidth, graphOriginY + A * scaleY);
+  drawingContext.setLineDash([]);
+  pop();
+  
+  // Ετικέτες για τα +A και -A στον άξονα ψ του γραφήματος:
+  fill(0);
+  textAlign(RIGHT, CENTER);
+  text("+A", graphOriginX - 10, graphOriginY - A * scaleY);
+  text("-A", graphOriginX - 10, graphOriginY + A * scaleY);
+  
+  // Live σχεδίαση της καμπύλης:
   let currentGraphTime = (t < T) ? t : T;
   let numPoints = 100;
   let fraction = currentGraphTime / T;
@@ -181,9 +196,9 @@ function draw() {
   noStroke();
   ellipse(xCurrent, yCurrent, 6, 6);
   
-  // Σχεδίαση faint διακεκομμένης (dotted) γραμμής που συνδέει το τελικό σημείο της καμπύλης (που αντιστοιχεί σε (n+1)T)
+  // Δotted (αχνή) γραμμή που συνδέει το τελικό σημείο της καμπύλης (που αντιστοιχεί σε (n+1)T) με τον οριζόντιο άξονα
   let yFinal = graphOriginY + (-A * sin(omega * T + phi)) * scaleY;
-  stroke(0);
+  stroke(0, 0, 0, 100);  // αχνή γραμμή
   drawingContext.setLineDash([1, 2]);
   line(graphOriginX + graphWidth, yFinal, graphOriginX + graphWidth, graphOriginY);
   drawingContext.setLineDash([]);
@@ -191,10 +206,11 @@ function draw() {
   
   // --- Προσομοίωση Ελατηρίου (Blue Body) ---
   push();
-  let springX = width * 0.75;  // x θέση του ελατηρίου
+  // Μετατοπίζουμε το ελατήριο 60px δεξιότερα
+  let springX = width * 0.75 + 60;
   let fixedY = 50;           // θέση "ταβανιού"
   let eqY = centerY;         // θέση ισορροπίας (κέντρο του καμβά)
-  // Το μπλε σώμα ταλαντεύεται: y = eqY - A*sinθ
+  // Το μπλε σώμα ταλαντεύεται: y = eqY - A*sinθ (κατά κλασική μέτρηση)
   let massY = eqY - A * sin(theta);
   
   // Σχεδίαση του ελατηρίου
@@ -220,12 +236,12 @@ function draw() {
   // --- Δotted γραμμή που συνδέει το κέντρο της "σκιάς" με το κέντρο του μπλε σώματος ---
   push();
   stroke(0);
-  drawingContext.setLineDash([1, 2]);
+  drawingContext.setLineDash([1, 2]); // πιο dotted
   line(160, redBodyY, springX, massY);
   drawingContext.setLineDash([]);
   pop();
   
-  // Εμφάνιση ετικετών για τους sliders (στην περιοχή των controls)
+  // Εμφάνιση ετικετών για τους sliders (περιοχή ελέγχου)
   push();
   fill(0);
   noStroke();
