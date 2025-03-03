@@ -8,7 +8,7 @@
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Στυλ εμπνευσμένο από το wavesfull.html */
+    /* Στυλ εμπνευσμένο από wavesfull.html */
     body, html {
       margin: 0;
       padding: 0;
@@ -17,7 +17,7 @@
       overflow: hidden;
       height: 100vh;
     }
-    /* Όλο το περιεχόμενο θα είναι μέσα στον καμβά */
+    /* Όλο το περιεχόμενο θα σχεδιαστεί μέσα στον καμβά */
     canvas {
       display: block;
     }
@@ -29,10 +29,10 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Ανέβασμα κατά 40px
+let sliderY1 = 60, sliderY2 = 100, sliderY3 = 140; // Έχουν ανέβει κατά 40px
 
-// Flags για εμφάνιση στοιχείων (μέσω checkboxes μέσα στον καμβά)
-let showRedOutline = false; // για "Προβολή"
+// Flags για εμφάνιση στοιχείων (μέσω checkboxes σχεδιασμένων μέσα στον καμβά)
+let showRedOutline = false; // "Προβολή"
 let showSpringBody = false;
 let showGraph = false;
 
@@ -59,7 +59,7 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Δημιουργία κουμπιών (θέσεις θα οριστούν στο draw)
+  // Δημιουργία κουμπιών (θα τοποθετηθούν μέσα στον καμβά στο draw)
   startPauseButton = createButton('Start');
   startPauseButton.style('position', 'absolute');
   startPauseButton.mousePressed(toggleSimulation);
@@ -75,17 +75,17 @@ function setup() {
 function draw() {
   background(240);
   
-  // Σχεδίαση τίτλου μέσα στον καμβά στο πάνω μέρος (centered)
-  textAlign(CENTER, CENTER);
-  textSize(20); 
-  fill(255);
-  noStroke();
-  // Χρησιμοποιούμε ένα στυλ παρόμοιο με το αρχείο wavesfull.html
+  // --- Σχεδίαση τίτλου μέσα στον καμβά ---
+  push();
   rectMode(CENTER);
+  noStroke();
   fill('#007BFF');
-  rect(width/2, 30, width, 50); // "Header" εντός του καμβά
+  rect(width/2, 30, width, 50);
   fill(255);
+  textSize(24);
+  textAlign(CENTER, CENTER);
   text("Ταλάντωση και Αρχική Φάση", width/2, 30);
+  pop();
   
   // Λήψη τιμών από τα sliders
   let A = amplitudeSlider.value();
@@ -102,7 +102,7 @@ function draw() {
   let centerX = 160;
   let centerY = height / 2;
   
-  textSize(14); // Επιστροφή στο αρχικό μέγεθος γραμματοσειράς
+  textSize(14); // Επιστροφή στο αρχικό μέγεθος
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
@@ -335,18 +335,15 @@ function mousePressed() {
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
-  // Checkbox 1: "Προβολή"
   if (mouseX >= baseX && mouseX <= baseX + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showRedOutline = !showRedOutline;
     redraw();
   }
-  // Checkbox 2: "Ελατήριο-Σώμα"
   let box2X = baseX + 150;
   if (mouseX >= box2X && mouseX <= box2X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showSpringBody = !showSpringBody;
     redraw();
   }
-  // Checkbox 3: "Γραφική Παράσταση"
   let box3X = baseX + 300;
   if (mouseX >= box3X && mouseX <= box3X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showGraph = !showGraph;
