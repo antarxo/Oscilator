@@ -2,11 +2,11 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Εφέ "Ταβανιού" και Επιλογές Εμφάνισης</title>
+  <title>Προσομοίωση με Εφέ "Ταβανιού" και Checkboxes</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 0; padding: 20px; }
     canvas { display: block; }
   </style>
 </head>
@@ -14,7 +14,7 @@
 <script>
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
-let showSpringBodyCheckbox, showGraphCheckbox, showRedOutlineCheckbox;
+let showRedOutlineCheckbox, showGraphCheckbox, showSpringBodyCheckbox;
 let startTime, startTimeOffset = 0;
 let isRunning = false; // Ξεκινάει σε παύση
 let sliderX = 20, sliderY = 20;
@@ -47,15 +47,19 @@ function setup() {
   resetButton.position(sliderX + 80, sliderY + 100);
   resetButton.mousePressed(resetSimulation);
   
-  // Checkboxes για απόκρυψη στοιχείων
-  showSpringBodyCheckbox = createCheckbox("Ελατήριο-Σώμα", true);
-  showSpringBodyCheckbox.position(sliderX, sliderY + 130);
+  // Checkboxes – τοποθετούνται σε μία γραμμή κάτω από το canvas (π.χ. στο y = height + 20)
+  let checkboxY = height + 20;
+  showRedOutlineCheckbox = createCheckbox("Κόκκινο περίγραμμα", false);
+  showRedOutlineCheckbox.position(20, checkboxY);
+  showRedOutlineCheckbox.changed(() => { redraw(); });
   
-  showGraphCheckbox = createCheckbox("Γραφική Παράσταση", true);
-  showGraphCheckbox.position(sliderX, sliderY + 160);
+  showGraphCheckbox = createCheckbox("Γραφική Παράσταση", false);
+  showGraphCheckbox.position(220, checkboxY);
+  showGraphCheckbox.changed(() => { redraw(); });
   
-  showRedOutlineCheckbox = createCheckbox("Κόκκινο περίγραμμα", true);
-  showRedOutlineCheckbox.position(sliderX, sliderY + 190);
+  showSpringBodyCheckbox = createCheckbox("Ελατήριο-Σώμα", false);
+  showSpringBodyCheckbox.position(420, checkboxY);
+  showSpringBodyCheckbox.changed(() => { redraw(); });
   
   startTime = millis();
   noLoop();
@@ -76,10 +80,10 @@ function draw() {
   
   // --- Phase Diagram (αριστερή περιοχή) ---
   push();
-  let centerX = 160; // μετατοπισμένο 60px δεξιότερα (π.χ. από 100 σε 160)
+  let centerX = 160; // Κέντρο του κύκλου (με μετατόπιση 60px δεξιότερα από 100)
   let centerY = height / 2;
   
-  // Κύκλος
+  // Κύκλος με ακτίνα A
   stroke(0);
   noFill();
   ellipse(centerX, centerY, 2 * A, 2 * A);
@@ -89,26 +93,28 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Ετικέτες στο κύκλο
+  // Ετικέτες στο phase diagram
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("0", centerX, centerY);
-  text("+A", centerX - 20, centerY - A - 5);  // +A λίγο ψηλότερα
-  text("-A", centerX - 20, centerY + A + 5);  // -A λίγο χαμηλότερα
+  text("0", centerX, centerY); // στο κέντρο
+  text("+A", centerX - 20, centerY - A - 5);  // λίγο ψηλότερα
+  text("-A", centerX - 20, centerY + A + 5);  // λίγο χαμηλότερα
   
-  // Γεμάτο κόκκινο σώμα (με κλασική μέτρηση: x = centerX + A*cosθ, y = centerY - A*sinθ)
+  // Θέση γεμάτου κόκκινου σώματος (x = centerX + A*cosθ, y = centerY - A*sinθ)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
+  // Σχεδίαση ακτίνας προς το γεμάτο κόκκινο σώμα
   stroke(0, 150, 0);
   line(centerX, centerY, redBodyX, redBodyY);
   
+  // Σχεδίαση γεμάτου κόκκινου σώματος
   fill(255, 0, 0);
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // "Σκιά": σώμα με dotted κόκκινο περίγραμμα (μόνο εάν το checkbox είναι ενεργό)
+  // Σχεδίαση "σκιάς" (κόκκινο περίγραμμα) μόνο αν είναι checked
   if (showRedOutlineCheckbox.checked()) {
     push();
     noFill();
@@ -118,7 +124,7 @@ function draw() {
     drawingContext.setLineDash([]);
     pop();
     
-    // Dotted (μαύρη) γραμμή που συνδέει το γεμάτο κόκκινο σώμα με τη "σκιά"
+    // Δotted (μαύρη) γραμμή που συνδέει το γεμάτο με τη "σκιά"
     push();
     stroke(0);
     drawingContext.setLineDash([2, 2]);
@@ -131,15 +137,15 @@ function draw() {
   // --- Γραφική Παράσταση Θέσης Live ---
   if (showGraphCheckbox.checked()) {
     push();
-    // Ο οριζόντιος άξονας του γραφήματος συμπίπτει με τον x-άξονα του κύκλου.
-    // Ο κατακόρυφος άξονας τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px).
+    // Τοποθετούμε τον οριζόντιο άξονα του γραφήματος να συμπίπτει με τον x-άξονα του κύκλου.
+    // Ο κατακόρυφος άξονας τοποθετείται στα δεξιά του κέντρου του κύκλου, σε απόσταση (maxAmplitude + 40px)
     let graphOriginX = centerX + 120 + 40; // 160 + 120 + 40 = 320
     let graphWidth = 200;
     let graphHeight = 240;  // για τιμές από -120 έως +120
     let graphOriginY = centerY;
     let scaleY = (graphHeight / 2) / 120;
     
-    // Αξόνες γραφήματος
+    // Σχεδίαση αξόνων γραφήματος
     stroke(0);
     line(graphOriginX, graphOriginY - graphHeight / 2, graphOriginX, graphOriginY + graphHeight / 2);
     line(graphOriginX, graphOriginY, graphOriginX + graphWidth, graphOriginY);
@@ -148,26 +154,24 @@ function draw() {
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);  // "ψ" λίγο δεξιότερα
-    text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);   // "t" μετατοπισμένη 60px δεξιότερα
+    text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);  // "ψ": 10px δεξιότερα
+    text("t", graphOriginX + graphWidth + 70, graphOriginY + 10);   // "t": 60px δεξιότερα από το αρχικό
     
-    // Ετικέτες στο μηδέν και στο τελικό σημείο του γραφήματος
+    // Ετικέτες στο μηδέν και στο τελικό σημείο
     let n = floor(t / T);
     text("(" + n + "T, 0)", graphOriginX - 10, graphOriginY + 15);  
     text("(" + (n + 1) + "T, 0)", graphOriginX + graphWidth, graphOriginY + 15);
     
     // Οριζόντιες dotted γραμμές για τις θέσεις +A και -A στον άξονα ψ του γραφήματος
     push();
-    stroke(0, 0, 0, 100);
+    stroke(0, 0, 0, 100); // αχνή γραμμή
     drawingContext.setLineDash([2, 2]);
-    // Στο +A σημείο (αντίστοιχα)
     line(graphOriginX, graphOriginY - A * scaleY, graphOriginX + graphWidth, graphOriginY - A * scaleY);
-    // Στο -A σημείο
     line(graphOriginX, graphOriginY + A * scaleY, graphOriginX + graphWidth, graphOriginY + A * scaleY);
     drawingContext.setLineDash([]);
     pop();
     
-    // Ετικέτες για τα +A και -A στον άξονα ψ του γραφήματος
+    // Ετικέτες για τις τιμές +A και -A στον άξονα ψ του γραφήματος
     fill(0);
     textAlign(RIGHT, CENTER);
     text("+A", graphOriginX - 10, graphOriginY - A * scaleY);
@@ -219,10 +223,10 @@ function draw() {
     let fixedY = 50;
     let eqY = centerY;
     
-    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής στο πάνω μέρος του ελατηρίου
+    // Εφέ "ταβανιού": σχεδίαση οριζόντιας γραμμής μόνο πάνω από το ελατήριο
     stroke(50);
     strokeWeight(4);
-    line(0, fixedY, width, fixedY);
+    line(springX - 60, fixedY, springX + 60, fixedY);
     strokeWeight(1);
     
     // Σχεδίαση του ελατηρίου
@@ -231,7 +235,7 @@ function draw() {
     beginShape();
     vertex(springX, fixedY);
     let numCoils = 12;
-    let coilLength = (eqY - fixedY - 20) / numCoils;  // μειώνουμε λίγο το μήκος για να μην έρχεται πολύ κοντά στο σώμα
+    let coilLength = (eqY - fixedY - 20) / numCoils; // λίγο μικρότερο μήκος ώστε να υπάρχει απόσταση από το σώμα
     for (let i = 1; i < numCoils; i++) {
       let xOffset = (i % 2 === 0) ? 20 : -20;
       vertex(springX + xOffset, fixedY + i * coilLength);
@@ -251,17 +255,16 @@ function draw() {
   push();
   stroke(0);
   drawingContext.setLineDash([1, 2]);
-  // Η "σκιά" έχει κέντρο στο (centerX, redBodyY) = (160, redBodyY)
-  // Εάν το σύστημα ελατηρίου-σώματος εμφανίζεται, το μπλε σώμα έχει κέντρο (springX, massY)
-  let springXForLine = (showSpringBodyCheckbox.checked()) ? (width * 0.75 + 60) : 0;
-  let massYForLine = (showSpringBodyCheckbox.checked()) ? (centerY - A * sin(theta)) : 0;
+  // Συνδέουμε το κέντρο της "σκιάς" (centerX, redBodyY) με το κέντρο του μπλε σώματος (μόνο αν εμφανίζεται το σύστημα ελατηρίου-σώματος)
   if (showSpringBodyCheckbox.checked()) {
+    let springXForLine = width * 0.75 + 60;
+    let massYForLine = centerY - A * sin(theta);
     line(160, redBodyY, springXForLine, massYForLine);
   }
   drawingContext.setLineDash([]);
   pop();
   
-  // --- Ετικέτες για τους sliders (περιοχή ελέγχου) ---
+  // --- Ετικέτες για τους sliders (ελέγχου) ---
   push();
   fill(0);
   noStroke();
