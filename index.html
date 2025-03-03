@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Προσομοίωση με Start/Pause, Reset, και "Σκιά"</title>
+  <title>Προσομοίωση με Ομοιόμορφη Εξίσωση Ταλάντωσης</title>
   <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
@@ -15,7 +15,7 @@
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let startTime, startTimeOffset = 0;
-let isRunning = false;  // Ξεκινάει σε παύση
+let isRunning = false; // Η προσομοίωση ξεκινάει σε παύση
 let sliderX = 20, sliderY = 20;
 
 function setup() {
@@ -50,7 +50,7 @@ function setup() {
   resetButton.mousePressed(resetSimulation);
   
   startTime = millis();
-  noLoop();  // Δεν ξεκινάει η προσομοίωση μέχρι να πατηθεί το "Start"
+  noLoop();  // Η προσομοίωση παραμένει στατική μέχρι να πατηθεί το "Start"
 }
 
 function draw() {
@@ -60,9 +60,9 @@ function draw() {
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
-  let phi = radians(phiDegrees); // μετατροπή μοίρων σε ακτίνια
+  let phi = radians(phiDegrees);
   
-  // Υπολογισμός χρόνου και γωνίας με εξίσωση ταλάντωσης y = A sin(ωt + φ)
+  // Υπολογισμός χρόνου και γωνίας με εξίσωση: θ = ωt + φ, όπου ω = 2π/T
   let t = (millis() - startTime) / 1000;
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
@@ -83,7 +83,7 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Υπολογισμός θέσης του κόκκινου σώματος (περιστροφή με φορά ρολογιού)
+  // Υπολογισμός θέσης του κόκκινου σώματος (με κλασική μέτρηση γωνιών)
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
@@ -96,25 +96,23 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // --- "Σκιά": Πρόσθετο σώμα με κόκκινο περίγραμμα, ταλαντεύεται στον άξονα ψ ---
-  // Η "σκιά" είναι η κατακόρυφη προβολή: έχει x = centerX και y = redBodyY
+  // Σχεδίαση της "σκιάς": σώμα με κόκκινο περίγραμμα, ταλαντεύεται πάνω στον άξονα ψ (προβολή του κόκκινου σώματος)
   stroke(255, 0, 0);
   noFill();
   ellipse(centerX, redBodyY, 15, 15);
   pop();
   
-  // Αποθήκευση των συντεταγμένων της "σκιάς" για τη σύνδεση
-  let shadowX = centerX;
-  let shadowY = redBodyY;
+  // Για τη διακεκομμένη γραμμή: αποθηκεύουμε το κέντρο της "σκιάς"
+  let shadowX = 160;
+  let shadowY = centerY - A * sin(theta);
   
-  // --- Προσομοίωση Ελατηρίου-Σώματος (Blue) ---
+  // --- Προσομοίωση Ελατηρίου (Blue Body) ---
   push();
   let springX = width * 0.75;  // x θέση του ελατηρίου
-  let fixedY = 50;           // θέση "ταβανιού"
+  let fixedY = 50;           // θέση του "ταβανιού"
   let eqY = height / 2;      // θέση ισορροπίας (κέντρο του καμβά)
-  // Η ταλάντωση στον ελατήριο ακολουθεί y = A sin(θ)
-  let springDisplacement = A * sin(theta);
-  let massY = eqY + springDisplacement;
+  // Το σώμα ταλαντεύεται με την ίδια εξίσωση (κλασική μέτρηση): για θετικό sin, μετατοπίζεται προς τα πάνω
+  let massY = eqY - A * sin(theta);
   
   // Σχεδίαση του ελατηρίου
   stroke(0);
@@ -130,7 +128,7 @@ function draw() {
   vertex(springX, massY);
   endShape();
   
-  // Σχεδίαση του μπλε σώματος (με μέγεθος 40)
+  // Σχεδίαση του μπλε σώματος (ολόκληρο σώμα)
   fill(0, 0, 255);
   noStroke();
   ellipse(springX, massY, 40, 40);
@@ -139,10 +137,9 @@ function draw() {
   // --- Διακεκομμένη (dotted) γραμμή που συνδέει το κέντρο της "σκιάς" με το κέντρο του μπλε σώματος ---
   push();
   stroke(0);
-  // Ορισμός dotted γραμμής (μικρότερα διαστήματα)
-  drawingContext.setLineDash([2, 2]);
-  line(shadowX, shadowY, springX, massY);
-  drawingContext.setLineDash([]);  // Επαναφορά κανονικού στυλ
+  drawingContext.setLineDash([1, 2]); // Πιο dotted
+  line(shadowX, shadowY, width * 0.75, massY);
+  drawingContext.setLineDash([]);  // Επαναφορά στο κανονικό στυλ
   pop();
   
   // Εμφάνιση ετικετών για τους sliders
@@ -157,12 +154,10 @@ function draw() {
 
 function toggleSimulation() {
   if (isRunning) {
-    // Παύση: Αποθήκευση του χρόνου που έχει παρέλθει
     startTimeOffset = millis() - startTime;
     noLoop();
     startPauseButton.html('Start');
   } else {
-    // Εκκίνηση: Προσαρμογή του startTime ώστε να συνεχιστεί ομαλά
     startTime = millis() - startTimeOffset;
     loop();
     startPauseButton.html('Pause');
@@ -171,7 +166,6 @@ function toggleSimulation() {
 }
 
 function resetSimulation() {
-  // Επαναφορά του χρόνου στο 0, με τις τρέχουσες τιμές των sliders
   startTime = millis();
   startTimeOffset = 0;
   if (!isRunning) {
