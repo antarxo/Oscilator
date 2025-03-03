@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Ταλάντωση και Αρχική Φάση</title>
-  <!-- Google Font Roboto for a modern look -->
+  <!-- Google Font Roboto για μοντέρνα εμφάνιση -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  <!-- p5.js library -->
+  <!-- Φόρτωση της βιβλιοθήκης p5.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
   <style>
-    /* Adopt a style similar to wavesfull.html */
+    /* Στυλ εμπνευσμένο από wavesfull.html */
     body, html {
       margin: 0;
       padding: 0;
@@ -17,31 +17,34 @@
       overflow: hidden;
       height: 100vh;
     }
-    /* All content is contained in the canvas */
+    /* Όλο το περιεχόμενο θα βρίσκεται μέσα στον καμβά */
+    canvas {
+      display: block;
+    }
   </style>
 </head>
 <body>
 <script>
-/* Global DOM elements for sliders and buttons */
+// Global DOM elements για sliders και κουμπιά
 let amplitudeSlider, periodSlider, phaseSlider;
 let startPauseButton, resetButton;
 let sliderX = 20;
-let sliderY1 = 100, sliderY2 = 130, sliderY3 = 160; // slider positions
+let sliderY1 = 100, sliderY2 = 120, sliderY3 = 140; // Νέες τιμές: μικρότερο κενό, πρώτη στο 100
 
-// Flags for showing/hiding elements (controlled by checkboxes drawn inside the canvas)
-let showRedOutline = false;
-let showGraph = false;
+// Flags για εμφάνιση στοιχείων (μέσω checkboxes που σχεδιάζονται μέσα στο canvas)
+let showRedOutline = false; // "Προβολή"
 let showSpringBody = false;
+let showGraph = false;
 
 let startTime, startTimeOffset = 0;
 let isRunning = false;
 
 function setup() {
-  // Create canvas that will include all content
+  // Δημιουργούμε έναν καμβά 800x600 που θα περιέχει όλο το περιεχόμενο
   let canvas = createCanvas(800, 600);
   canvas.parent(document.body);
   
-  // Create DOM sliders – these are positioned relative to the window
+  // Δημιουργία DOM sliders (από 20, sliderY)
   amplitudeSlider = createSlider(0, 120, 60, 1);
   amplitudeSlider.position(sliderX, sliderY1);
   amplitudeSlider.style('width', '160px');
@@ -57,9 +60,14 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Create control buttons (their positions will be set later in draw)
+  // Δημιουργία κουμπιών Start/Pause και Reset
   startPauseButton = createButton('Start');
+  startPauseButton.style('position', 'absolute'); // Absolute positioning
+  startPauseButton.mousePressed(toggleSimulation);
+  
   resetButton = createButton('Reset');
+  resetButton.style('position', 'absolute');
+  resetButton.mousePressed(resetSimulation);
   
   startTime = millis();
   noLoop();
@@ -68,13 +76,13 @@ function setup() {
 function draw() {
   background(240);
   
-  // Draw title at the top of the canvas (centered)
+  // Σχεδίαση τίτλου στο πάνω μέρος του καμβά
   textAlign(CENTER, CENTER);
-  textSize(28);
+  textSize(20);
   fill(0);
   text("Ταλάντωση και Αρχική Φάση", width/2, 40);
   
-  // Get slider values
+  // Λήψη τιμών από τα sliders
   let A = amplitudeSlider.value();
   let T = periodSlider.value();
   let phiDegrees = phaseSlider.value();
@@ -84,9 +92,9 @@ function draw() {
   let omega = TWO_PI / T;
   let theta = omega * t + phi;
   
-  // --- Phase Diagram (Circle) ---
+  // --- Phase Diagram (Κύκλος) ---
   push();
-  let centerX = 160; // center of circle (60px right from 100)
+  let centerX = 160;
   let centerY = height / 2;
   
   stroke(0);
@@ -97,15 +105,13 @@ function draw() {
   line(0, centerY, width + 60, centerY);
   line(centerX, centerY - A - 10, centerX, centerY + A + 10);
   
-  // Labels on the circle
   fill(0);
   noStroke();
   textAlign(CENTER, CENTER);
-  text("0", centerX - 10, centerY + 10); // moved 10px left and 10px down
-  text("+A", centerX - 20 + 5, centerY - A - 5); // shifted 5px right and 5px up
-  text("-A", centerX - 20 + 5, centerY + A + 5); // shifted 5px right and 5px down
+  text("0", centerX - 10, centerY + 10);
+  text("+A", centerX - 20 + 5, centerY - A - 5);
+  text("-A", centerX - 20 + 5, centerY + A + 5);
   
-  // Compute position of red filled body
   let redBodyX = centerX + A * cos(theta);
   let redBodyY = centerY - A * sin(theta);
   
@@ -116,7 +122,6 @@ function draw() {
   noStroke();
   ellipse(redBodyX, redBodyY, 15, 15);
   
-  // "Shadow": red outline (only if showRedOutline is true)
   if (showRedOutline) {
     push();
     noFill();
@@ -135,12 +140,12 @@ function draw() {
   }
   pop();
   
-  // --- Live Graph of Position ---
+  // --- Live Graph ---
   if (showGraph) {
     push();
     let graphOriginX = centerX + 120 + 40; // 320
     let graphWidth = 200;
-    let graphHeight = 240; // covers values from -120 to +120
+    let graphHeight = 240;
     let graphOriginY = centerY;
     let scaleY = (graphHeight / 2) / 120;
     
@@ -151,9 +156,7 @@ function draw() {
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    // "ψ" label: shifted 10px left from graphOriginX
     text("ψ", graphOriginX - 10, graphOriginY - graphHeight / 2);
-    // "t" label: shifted 10px left from graphOriginX + graphWidth + 60
     text("t", graphOriginX + graphWidth + 60 - 10, graphOriginY + 10);
     
     let n = floor(t / T);
@@ -206,12 +209,12 @@ function draw() {
   // --- Spring-Body System (Blue Body & Spring) ---
   if (showSpringBody) {
     push();
-    let springX = width * 0.75 + 60; // 60px to the right
+    let springX = width * 0.75 + 60;
     let fixedY = 50;
     let centerY = height / 2;
     let massY = centerY - A * sin(theta);
     
-    // "Ταβάνι" effect: a horizontal line above the spring (only above the spring)
+    // "Ταβάνι": οριζόντια γραμμή πάνω μόνο από το ελατήριο (μόνο πάνω από το ελατήριο)
     stroke(50);
     strokeWeight(4);
     line(springX - 60, fixedY, springX + 60, fixedY);
@@ -236,7 +239,7 @@ function draw() {
     pop();
   }
   
-  // --- Dotted line connecting "shadow" center and blue body center ---
+  // --- Dotted line connecting "shadow" and blue body ---
   push();
   stroke(0);
   drawingContext.setLineDash([1, 2]);
@@ -251,11 +254,13 @@ function draw() {
   // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
   let btnY = baseCheckboxY() + 30;
-  // Position the Start/Pause and Reset buttons centered below the checkboxes
+  // Τα κουμπιά στοιχίζονται στο κέντρο του καμβά, κάτω από τα checkboxes
   startPauseButton.position(width/2 - 50, btnY);
   resetButton.position(width/2 + 10, btnY);
+  startPauseButton.style('position','absolute');
+  resetButton.style('position','absolute');
   
-  // --- Slider Labels (aligned with their corresponding sliders) ---
+  // --- Slider Labels (ευθυγραμμισμένες με τους αντίστοιχους DOM sliders) ---
   push();
   fill(0);
   noStroke();
@@ -276,11 +281,11 @@ function drawCheckboxes() {
   textSize(14);
   textAlign(LEFT, CENTER);
   
-  // Group them in a 400px wide area, centered
+  // Ομαδοποίηση: συνολικό πλάτος περίπου 400px, κεντραρισμένο
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
-  // Checkbox 1: "Προβολή" (for red outline)
+  // Checkbox 1: "Προβολή"
   fill(255);
   stroke(0);
   rect(baseX, baseY, boxSize, boxSize);
@@ -328,18 +333,15 @@ function mousePressed() {
   let groupWidth = 400;
   let baseX = (width - groupWidth) / 2;
   
-  // Checkbox 1: "Προβολή"
   if (mouseX >= baseX && mouseX <= baseX + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showRedOutline = !showRedOutline;
     redraw();
   }
-  // Checkbox 2: "Ελατήριο-Σώμα"
   let box2X = baseX + 150;
   if (mouseX >= box2X && mouseX <= box2X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showSpringBody = !showSpringBody;
     redraw();
   }
-  // Checkbox 3: "Γραφική Παράσταση"
   let box3X = baseX + 300;
   if (mouseX >= box3X && mouseX <= box3X + boxSize && mouseY >= baseY && mouseY <= baseY + boxSize) {
     showGraph = !showGraph;
