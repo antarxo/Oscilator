@@ -59,7 +59,7 @@ function setup() {
   phaseSlider.style('width', '160px');
   phaseSlider.input(() => { if (!isRunning) redraw(); });
   
-  // Δημιουργία κουμπιών Start/Pause και Reset
+  // Δημιουργία κουμπιών Start/Pause και Reset με σταθερό πλάτος
   startPauseButton = createButton('Start');
   startPauseButton.style('position', 'absolute');
   startPauseButton.style('background', '#007BFF');
@@ -69,6 +69,7 @@ function setup() {
   startPauseButton.style('padding', '8px 12px');
   startPauseButton.style('font-size', '16px');
   startPauseButton.style('cursor', 'pointer');
+  startPauseButton.style('width', '100px');  // Σταθερό πλάτος
   startPauseButton.mousePressed(toggleSimulation);
   
   resetButton = createButton('Reset');
@@ -80,6 +81,7 @@ function setup() {
   resetButton.style('padding', '8px 12px');
   resetButton.style('font-size', '16px');
   resetButton.style('cursor', 'pointer');
+  resetButton.style('width', '100px');  // Σταθερό πλάτος
   resetButton.mousePressed(resetSimulation);
   
   startTime = millis();
@@ -163,7 +165,7 @@ function draw() {
   // --- Live Graph ---
   if (showGraph) {
     push();
-    let graphOriginX = centerX + 120 + 40; // 320
+    let graphOriginX = centerX + 120 + 40;
     let graphWidth = 200;
     let graphHeight = 240;
     let graphOriginY = centerY;
@@ -272,11 +274,9 @@ function draw() {
   
   // --- Draw Checkboxes and Control Buttons inside the canvas ---
   drawCheckboxes();
-  let btnY = baseCheckboxY() + 60; // Αυξημένο κενό μεταξύ checkboxes και κουμπιών
+  let btnY = baseCheckboxY() + 60;
   startPauseButton.position(width/2 - 50, btnY);
-  resetButton.position(width/2 + 20, btnY); // Με αύξηση 10px στη θέση του reset
-  startPauseButton.style('position','absolute');
-  resetButton.style('position','absolute');
+  resetButton.position(width/2 + 20, btnY); // 10px αύξηση στο reset (δηλαδή 20px από το κέντρο)
   
   // --- Slider Labels (aligned with each slider) ---
   push();
